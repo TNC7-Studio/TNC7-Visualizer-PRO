@@ -183,13 +183,13 @@
             <input type="file" id="audioInput" accept="audio/*" multiple class="hidden">
             <button class="btn-custom" id="btnHapusAudio">Hapus Audio</button>
             <div class="w-px h-4 bg-gray-700 mx-1"></div>
-            <button class="btn-custom" onclick="document.getElementById('bgImagePlaylistInput').click()"><i class="fa-solid fa-images text-xs"></i> + P.Gambar</button>
-            <input type="file" id="bgImagePlaylistInput" accept="image/*" multiple class="hidden">
-            <button class="btn-custom" id="btnHapusImagePlaylist">Hapus P.Gambar</button>
+            <!-- UPDATE: Tambahkan dukungan Video MP4/WebM -->
+            <button class="btn-custom" onclick="document.getElementById('bgImagePlaylistInput').click()"><i class="fa-solid fa-images text-xs"></i> + Background</button>
+            <input type="file" id="bgImagePlaylistInput" accept="image/*,video/mp4,video/webm" multiple class="hidden">
+            <button class="btn-custom" id="btnHapusImagePlaylist">Hapus BG</button>
             <div class="w-px h-4 bg-gray-700 mx-1"></div>
             
             <div class="flex items-center gap-1" id="renderBitrateModeGroup">
-                <!-- FITUR BARU: RESOLUSI & FPS -->
                 <span class="text-[10px] font-bold text-gray-400 tracking-wider mr-1">KUALITAS:</span>
                 <select id="renderResSelect" class="custom-select w-[60px]" title="Resolusi Video">
                     <option value="720">720p</option>
@@ -218,7 +218,6 @@
                 </select>
             </div>
             
-            <!-- FITUR BARU: INDIKATOR RATING KEUNIKAN -->
             <div id="uniqueness-container" class="flex flex-col ml-2 justify-center w-28 bg-gray-800/50 p-1 rounded border border-gray-700" title="Capai 80-100% (Hijau) agar aman untuk monetisasi YouTube">
                 <div class="flex justify-between w-full mb-[2px] items-center">
                     <span class="text-[8px] font-bold text-gray-400 tracking-wider">UNIK:</span>
@@ -244,8 +243,16 @@
                         <span class="text-[9px] text-gray-300 font-bold uppercase">Mirror</span>
                     </label>
                 </div>
+                
+                <!-- UPDATE: Fitur Crossfade Gambar Latar -->
+                <div class="flex items-center gap-1 bg-gray-800/50 p-1 rounded border border-gray-700">
+                    <label class="flex items-center gap-1 cursor-pointer flex-1">
+                        <input type="checkbox" id="bgCrossfadeEnable" checked class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
+                        <span class="text-[9px] text-gray-300 font-bold uppercase tracking-wider">Transisi Halus (Crossfade)</span>
+                    </label>
+                </div>
 
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-1 mt-1">
                     <span class="text-[9px] font-bold text-gray-500 w-8">FX</span>
                     <div class="flex flex-wrap gap-1 flex-1" id="bgEffectGroup">
                         <button class="btn-custom btn-active" data-val="normal">Normal</button>
@@ -255,7 +262,6 @@
                     </div>
                 </div>
                 
-                <!-- FITUR BARU: AUTO BEAT DROP FX -->
                 <div class="flex items-center gap-1 mt-1 bg-gray-800/50 p-1 rounded border border-gray-700">
                     <label class="flex items-center gap-1 cursor-pointer flex-1">
                         <input type="checkbox" id="beatDropFxEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
@@ -324,7 +330,6 @@
                 <div class="relative mt-0">
                     <select class="custom-select" id="vizTypeSelect">
                         <optgroup label="Terbaru (Modern) ⭐">
-                            <!-- FITUR BARU: CIRCLE PROGRESS -->
                             <option value="circle_progress">⭕ Modern - Circle Progress</option>
                             <option value="modern_cyber_bars">Modern - Cyberpunk Bars</option>
                             <option value="modern_dna_helix">Modern - DNA Helix</option>
@@ -349,6 +354,15 @@
             
             <div class="panel">
                 <div class="panel-header">CUACA / PARTIKEL</div>
+                
+                <!-- UPDATE: Sistem Partikel Reaktif Audio -->
+                <div class="flex items-center gap-1 mb-1 bg-gray-800/50 p-1 rounded border border-gray-700">
+                    <label class="flex items-center gap-1 cursor-pointer flex-1">
+                        <input type="checkbox" id="weatherReactiveEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
+                        <span class="text-[9px] text-yellow-400 font-bold uppercase tracking-wider">⚡ Partikel Reaktif Audio</span>
+                    </label>
+                </div>
+
                 <div class="flex items-center gap-1">
                     <div class="flex flex-wrap gap-1 flex-1" id="bgWeatherGroup">
                         <button class="btn-custom btn-active" data-val="normal">Cerah</button>
@@ -473,7 +487,6 @@
                     </label>
                 </div>
                 
-                <!-- FITUR BARU: SMART TOAST UP NEXT -->
                 <div class="flex items-center gap-1 mt-1 bg-gray-800/50 p-1 rounded border border-gray-700">
                     <label class="flex items-center gap-1 cursor-pointer flex-1">
                         <input type="checkbox" id="playlistUpNextEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
@@ -732,14 +745,13 @@
             
             <div class="panel playlist-panel" id="imgPlaylistPanel" style="display: none; max-height: 250px;">
                 <div class="panel-header-container">
-                    <span class="panel-header">PLAYLIST GAMBAR</span>
-                    <span id="imgPlaylistCount" class="text-xs font-normal">0 gbr</span>
+                    <span class="panel-header">PLAYLIST BG</span>
+                    <span id="imgPlaylistCount" class="text-xs font-normal">0 item</span>
                 </div>
-                <!-- FITUR BARU: AUTO SLIDESHOW -->
                 <div class="flex items-center gap-1 mb-2 bg-gray-800 p-1 rounded border border-gray-700 justify-between">
                     <label class="flex items-center gap-1 cursor-pointer flex-1">
                         <input type="checkbox" id="autoSlideshowEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
-                        <span class="text-[9px] text-gray-300 font-bold uppercase tracking-wider">Auto Ganti Gambar</span>
+                        <span class="text-[9px] text-gray-300 font-bold uppercase tracking-wider">Auto Ganti</span>
                     </label>
                     <div class="flex items-center gap-1">
                         <input type="number" id="slideshowIntervalInput" value="10" min="1" max="999" class="custom-input w-8 text-center text-[9px] px-0 h-4">
@@ -775,9 +787,10 @@
             pinInput.focus();
         });
 
+        // UPDATE: Penambahan State untuk Crossfade, dan Weather Reactive
         const state = {
             viz: { enabled: true, align: 'full', size: 0.5, width: 0.5, opacity: 1.0, type: 'modern_cyber_bars', offsetX: 0, offsetY: 0, colorMode: 'auto', staticColor: '#facc15', argbSpeed: 15 },
-            bg: { color: '#0f1115', image: null, imgElement: null, effect: 'normal', weather: ['normal'], darkness: 0, pulseIntensity: 0.50, scale: 1.0, snowIntensity: 50, weatherSpeed: 50, mirror: false, autoSlideshow: false, slideshowInterval: 10, beatDropFx: false },
+            bg: { color: '#0f1115', image: null, imgElement: null, effect: 'normal', weather: ['normal'], darkness: 0, pulseIntensity: 0.50, scale: 1.0, snowIntensity: 50, weatherSpeed: 50, mirror: false, autoSlideshow: false, slideshowInterval: 10, beatDropFx: false, crossfade: true, weatherReactive: false },
             overlay: { element: null, type: null, lapisan: 'depan', blend: 'normal', size: 0.5, opacity: 1, speed: 0.5, anim: 'none', offsetX: 0, offsetY: 0, animTime: 0, lastDrawTime: 0 },
             textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50 },
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
@@ -821,6 +834,9 @@
         let audioObjectURLs = []; let isOfflineRendering = false; let isRenderingPlaylist = false; let renderQueueIndex = 0; window.offlineCurrentTime = 0;
         let imagePlaylist = []; let currentImageIndex = -1; let isImagePlaylistActive = false;
         let beatDropFlashAlpha = 0; let lastKickDrop = 0; let lastSlideshowTime = 0;
+        
+        // UPDATE: Variabel Crossfade
+        let bgPrevElement = null; let bgCrossfadeStartTime = 0; let isBgCrossfading = false;
 
         function getRenderTime() { return isOfflineRendering ? window.offlineCurrentTime : Date.now() / 1000; }
         function showNotification(msg) {
@@ -957,6 +973,8 @@
         document.getElementById('vizTypeSelect').addEventListener('change', (e) => { state.viz.type = e.target.value; });
         
         document.getElementById('bgMirrorEnable').addEventListener('change', (e) => { state.bg.mirror = e.target.checked; });
+        document.getElementById('bgCrossfadeEnable').addEventListener('change', (e) => { state.bg.crossfade = e.target.checked; });
+        document.getElementById('weatherReactiveEnable').addEventListener('change', (e) => { state.bg.weatherReactive = e.target.checked; });
         document.getElementById('beatDropFxEnable').addEventListener('change', (e) => { state.bg.beatDropFx = e.target.checked; });
         document.getElementById('bgDarknessSlider').addEventListener('input', (e) => { state.bg.darkness = e.target.value / 100; });
         document.getElementById('bgScaleSlider').addEventListener('input', (e) => { state.bg.scale = e.target.value / 100; });
@@ -1055,6 +1073,7 @@
             catch (err) { showNotification("Gagal mengambil tangkapan layar."); }
         });
 
+        // UPDATE: Terima format Video
         document.getElementById('bgImagePlaylistInput').addEventListener('change', (e) => {
             const files = Array.from(e.target.files); if (files.length === 0) return;
             if (imagePlaylist.length > 0) { imagePlaylist.forEach(item => { if (item.url) URL.revokeObjectURL(item.url); }); imagePlaylist = []; }
@@ -1062,26 +1081,58 @@
             isImagePlaylistActive = true; document.getElementById('imgPlaylistPanel').style.display = 'flex';
             if (currentTrackIndex >= 0) currentImageIndex = currentTrackIndex % imagePlaylist.length; else currentImageIndex = 0;
             if (imagePlaylist.length > 0) loadBgImageFromPlaylist(currentImageIndex);
-            renderImagePlaylistUI(); showNotification(`${files.length} gambar ditambahkan ke playlist`); e.target.value = '';
+            renderImagePlaylistUI(); showNotification(`${files.length} gambar/video ditambahkan ke playlist`); e.target.value = '';
         });
 
         document.getElementById('btnHapusImagePlaylist').addEventListener('click', () => {
             imagePlaylist.forEach(item => { if (item.url) URL.revokeObjectURL(item.url); });
             imagePlaylist = []; isImagePlaylistActive = false; currentImageIndex = -1; document.getElementById('imgPlaylistPanel').style.display = 'none';
-            state.bg.image = null; state.bg.imgElement = null; renderImagePlaylistUI(); showNotification("Playlist gambar dihapus");
+            state.bg.image = null; state.bg.imgElement = null; 
+            bgPrevElement = null; isBgCrossfading = false;
+            renderImagePlaylistUI(); showNotification("Playlist latar belakang dihapus");
         });
 
+        // UPDATE: Logika Crossfade & Pemutaran Video Background
         function loadBgImageFromPlaylist(index) {
             if (index < 0 || index >= imagePlaylist.length) return;
-            const item = imagePlaylist[index]; const img = new Image();
-            img.onload = () => { state.bg.image = item.url; state.bg.imgElement = img; if(!isPlaying && !isOfflineRendering) drawCanvas(); }; 
-            img.src = item.url;
+            const item = imagePlaylist[index]; 
+            const isVideo = item.file.type.startsWith('video/');
+
+            // Trigger crossfade jika sudah ada elemen sebelumnya
+            if (state.bg.imgElement && state.bg.crossfade) {
+                bgPrevElement = state.bg.imgElement;
+                bgCrossfadeStartTime = getRenderTime();
+                isBgCrossfading = true;
+            } else {
+                bgPrevElement = null;
+                isBgCrossfading = false;
+            }
+
+            if (isVideo) {
+                const vid = document.createElement('video');
+                vid.src = item.url; vid.loop = true; vid.muted = true;
+                // Mainkan video jika sedang preview
+                if (!isOfflineRendering) {
+                    vid.play().catch(e => console.log("Auto-play video latar belakang tertunda"));
+                }
+                state.bg.image = item.url; 
+                state.bg.imgElement = vid;
+                if(!isPlaying && !isOfflineRendering) drawCanvas();
+            } else {
+                const img = new Image();
+                img.onload = () => { 
+                    state.bg.image = item.url; 
+                    state.bg.imgElement = img; 
+                    if(!isPlaying && !isOfflineRendering) drawCanvas(); 
+                }; 
+                img.src = item.url;
+            }
         }
 
         function renderImagePlaylistUI() {
             const container = document.getElementById('imgPlaylistContainer'); const countDisplay = document.getElementById('imgPlaylistCount'); const panel = document.getElementById('imgPlaylistPanel');
             if (imagePlaylist.length === 0) { panel.style.display = 'none'; return; }
-            panel.style.display = 'flex'; countDisplay.textContent = `${imagePlaylist.length} gbr`; container.innerHTML = '';
+            panel.style.display = 'flex'; countDisplay.textContent = `${imagePlaylist.length} item`; container.innerHTML = '';
             
             imagePlaylist.forEach((item, index) => {
                 const el = document.createElement('div'); el.className = `img-playlist-item border-t-2 border-transparent transition-colors ${index === currentImageIndex ? 'active' : ''}`; el.draggable = true;
@@ -1099,7 +1150,17 @@
                 });
                 el.addEventListener('dragend', () => { el.style.opacity = '1'; draggedImgPlaylistIndex = null; });
                 const dragIcon = document.createElement('i'); dragIcon.className = 'fa-solid fa-grip-vertical text-gray-600 mr-2 cursor-grab text-[10px] hover:text-gray-400';
-                const thumb = document.createElement('img'); thumb.className = 'img-playlist-thumb'; thumb.src = item.url;
+                
+                // Tambahkan ikon video jika item adalah video
+                let thumb;
+                if (item.file.type.startsWith('video/')) {
+                    thumb = document.createElement('div');
+                    thumb.className = 'img-playlist-thumb flex items-center justify-center bg-gray-800';
+                    thumb.innerHTML = '<i class="fa-solid fa-film text-[10px] text-gray-400"></i>';
+                } else {
+                    thumb = document.createElement('img'); thumb.className = 'img-playlist-thumb'; thumb.src = item.url;
+                }
+
                 const nameSpan = document.createElement('span'); nameSpan.className = 'img-playlist-name'; nameSpan.textContent = item.file.name; nameSpan.title = item.file.name;
                 el.onclick = () => { currentImageIndex = index; loadBgImageFromPlaylist(index); renderImagePlaylistUI(); };
                 const removeBtn = document.createElement('button'); removeBtn.className = 'remove-track-btn p-1'; removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
@@ -1128,13 +1189,14 @@
         canvasWrapperDOM.addEventListener('dragleave', (e) => { e.preventDefault(); canvasWrapperDOM.classList.remove('drag-over'); });
         canvasWrapperDOM.addEventListener('drop', (e) => {
             e.preventDefault(); canvasWrapperDOM.classList.remove('drag-over');
-            const imageFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-            if (imageFiles.length > 0) {
+            // UPDATE: Terima format Video
+            const mediaFiles = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+            if (mediaFiles.length > 0) {
                 const wasEmpty = imagePlaylist.length === 0;
-                imageFiles.forEach(file => { const url = URL.createObjectURL(file); imagePlaylist.push({ file: file, url: url }); });
+                mediaFiles.forEach(file => { const url = URL.createObjectURL(file); imagePlaylist.push({ file: file, url: url }); });
                 isImagePlaylistActive = true; document.getElementById('imgPlaylistPanel').style.display = 'flex';
                 if (wasEmpty || currentImageIndex === -1) { if (currentTrackIndex >= 0) currentImageIndex = currentTrackIndex % imagePlaylist.length; else currentImageIndex = 0; loadBgImageFromPlaylist(currentImageIndex); }
-                renderImagePlaylistUI(); showNotification(`${imageFiles.length} gambar ditambahkan ke playlist`);
+                renderImagePlaylistUI(); showNotification(`${mediaFiles.length} gambar/video ditambahkan ke playlist`);
             }
         });
 
@@ -1240,7 +1302,17 @@
 
                 let hasVideoChunks = false;
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addVideoChunk(chunk, meta); hasVideoChunks = true; } catch (e) { abortOfflineRender = true; } }, error: (e) => { abortOfflineRender = true; } });
-                videoEncoder.configure({ codec: 'avc1.42E01F', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, bitrateMode: state.render.bitrateMode });
+                
+                let vConfig = { codec: 'avc1.4d002a', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, bitrateMode: state.render.bitrateMode, hardwareAcceleration: 'prefer-hardware' };
+                try {
+                    const support = await window.VideoEncoder.isConfigSupported(vConfig);
+                    if (!support.supported) {
+                        vConfig = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, hardwareAcceleration: 'no-preference' };
+                    }
+                } catch (e) {
+                    vConfig = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS };
+                }
+                videoEncoder.configure(vConfig);
 
                 audioEncoder = new AudioEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addAudioChunk(chunk, meta); } catch(e) { abortOfflineRender = true; } }, error: (e) => { abortOfflineRender = true; } });
                 audioEncoder.configure({ codec: 'mp4a.40.2', sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
@@ -1291,6 +1363,14 @@
 
                         if (state.overlay.type === 'video' && state.overlay.element) state.overlay.element.currentTime = window.offlineCurrentTime % state.overlay.element.duration;
                         
+                        // UPDATE: Sync Waktu Background Video Saat Render Offline
+                        if (state.bg.imgElement && state.bg.imgElement.tagName === 'VIDEO') {
+                            state.bg.imgElement.currentTime = window.offlineCurrentTime % (state.bg.imgElement.duration || 1);
+                        }
+                        if (bgPrevElement && bgPrevElement.tagName === 'VIDEO') {
+                            bgPrevElement.currentTime = window.offlineCurrentTime % (bgPrevElement.duration || 1);
+                        }
+                        
                         if (state.bg.autoSlideshow && isImagePlaylistActive && imagePlaylist.length > 0) {
                             if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) {
                                 currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length;
@@ -1312,7 +1392,7 @@
                             try { videoEncoder.encode(vframe, { keyFrame: (frameIdx === 0) || (totalVideoFramesEncoded % targetFPS === 0) }); } catch (e) { abortOfflineRender = true; }
                             vframe.close(); totalVideoFramesEncoded++;
                         }
-                        while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 5)); }
+                        while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 2)); }
 
                         frameIdx++; let nextTime = frameIdx * interval;
                         if (nextTime < duration && !abortOfflineRender) {
@@ -1382,7 +1462,17 @@
                 muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: targetWidth, height: targetHeight, frameRate: targetFPS }, audio: { codec: 'aac', sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: "in-memory" });
 
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { try { muxer.addVideoChunk(chunk, meta); } catch (chunkErr) {} }, error: (e) => { abortOfflineRender = true; } });
-                videoEncoder.configure({ codec: 'avc1.42E01F', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, bitrateMode: state.render.bitrateMode });
+                
+                let vConfigSingle = { codec: 'avc1.4d002a', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, bitrateMode: state.render.bitrateMode, hardwareAcceleration: 'prefer-hardware' };
+                try {
+                    const support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
+                    if (!support.supported) {
+                        vConfigSingle = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, hardwareAcceleration: 'no-preference' };
+                    }
+                } catch (e) {
+                    vConfigSingle = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS };
+                }
+                videoEncoder.configure(vConfigSingle);
 
                 audioEncoder = new AudioEncoder({ output: (chunk, meta) => { try { muxer.addAudioChunk(chunk, meta); } catch(e) {} }, error: (e) => { abortOfflineRender = true; } });
                 audioEncoder.configure({ codec: 'mp4a.40.2', sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
@@ -1416,6 +1506,15 @@
                     let currentTime = frameIdx * interval; window.offlineCurrentTime = currentTime; analyser.getByteFrequencyData(dataArray);
 
                     if (state.overlay.type === 'video' && state.overlay.element) state.overlay.element.currentTime = window.offlineCurrentTime % state.overlay.element.duration;
+                    
+                    // UPDATE: Sync Waktu Background Video Saat Render Offline
+                    if (state.bg.imgElement && state.bg.imgElement.tagName === 'VIDEO') {
+                        state.bg.imgElement.currentTime = window.offlineCurrentTime % (state.bg.imgElement.duration || 1);
+                    }
+                    if (bgPrevElement && bgPrevElement.tagName === 'VIDEO') {
+                        bgPrevElement.currentTime = window.offlineCurrentTime % (bgPrevElement.duration || 1);
+                    }
+
                     if (state.bg.autoSlideshow && isImagePlaylistActive && imagePlaylist.length > 0) {
                         if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) { currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length; loadBgImageFromPlaylist(currentImageIndex); lastSlideshowTime = window.offlineCurrentTime; }
                     }
@@ -1426,7 +1525,7 @@
                     }
                     drawCanvas(); 
                     if (videoEncoder.state === 'configured') { const vframe = new VideoFrame(canvas, { timestamp: Math.round(currentTime * 1e6) }); try { videoEncoder.encode(vframe, { keyFrame: (frameIdx % targetFPS === 0) }); } catch (e) { } vframe.close(); }
-                    while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 5)); }
+                    while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 2)); }
                     
                     frameIdx++; let nextTime = frameIdx * interval;
                     if (nextTime < duration && !abortOfflineRender) {
@@ -1502,7 +1601,6 @@
                 lastPreviewTime = timestamp - (elapsed % PREVIEW_INTERVAL);
                 if (isPlaying && analyser) analyser.getByteFrequencyData(dataArray);
                 
-                // Cek Slideshow saat Preview
                 if (isPlaying && state.bg.autoSlideshow && isImagePlaylistActive && imagePlaylist.length > 0) {
                     let cTime = audioElement.currentTime;
                     if (cTime - lastSlideshowTime >= state.bg.slideshowInterval || cTime < lastSlideshowTime) {
@@ -1516,7 +1614,14 @@
 
         function drawCanvas() {
             if(!ctx || !canvas.width) return;
-            const w = canvas.width; const h = canvas.height; const cx = w / 2; const cy = h / 2;
+            
+            ctx.save();
+            const scaleX = canvas.width / 1280;
+            const scaleY = canvas.height / 720;
+            ctx.scale(scaleX, scaleY);
+            
+            const w = 1280; const h = 720; const cx = w / 2; const cy = h / 2;
+            
             ctx.fillStyle = state.bg.color || '#0f1115'; ctx.fillRect(0, 0, w, h);
             bboxes.viz = null; bboxes.overlay = null; bboxes.text = null; bboxes.time = null; bboxes.playlist = null;
             
@@ -1529,17 +1634,31 @@
                 smoothedKick = Math.max(rawKick, smoothedKick * 0.5); kickBassReactivity = smoothedKick;
             } else { smoothedKick *= 0.5; kickBassReactivity = smoothedKick; }
 
-            // Logika Auto Beat Drop (Flash)
             if (state.bg.beatDropFx && kickBassReactivity > 0.8 && lastKickDrop < 0.6) { beatDropFlashAlpha = 1.0; }
             lastKickDrop = kickBassReactivity;
 
-            if (state.bg.imgElement) {
-                ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-                const imgRatio = state.bg.imgElement.width / state.bg.imgElement.height; const canvasRatio = w / h;
-                let drawW = w; let drawH = h; let drawX = 0; let drawY = 0;
-                if (canvasRatio > imgRatio) { drawH = w / imgRatio; drawY = (h - drawH) / 2; } else { drawW = h * imgRatio; drawX = (w - drawW) / 2; }
+            // UPDATE: Logika Penggambaran Background dengan Transisi Crossfade
+            let globalAlphaBG = 1.0; let prevGlobalAlphaBG = 0.0;
+            if (isBgCrossfading && state.bg.crossfade) {
+                let elapsed = getRenderTime() - bgCrossfadeStartTime;
+                let duration = 1.0; // Durasi transisi 1 detik
+                if (elapsed < duration) {
+                    globalAlphaBG = elapsed / duration;
+                    prevGlobalAlphaBG = 1.0 - (elapsed / duration);
+                } else {
+                    isBgCrossfading = false;
+                    bgPrevElement = null;
+                }
+            }
+
+            const drawBgItem = (element, specificAlpha) => {
+                if (!element) return;
+                const eRatio = (element.videoWidth || element.width) / (element.videoHeight || element.height);
+                const canvasRatio = w / h;
+                let drawW = w; let drawH = h;
+                if (canvasRatio > eRatio) { drawH = w / eRatio; } else { drawW = h * eRatio; }
                 
-                let timeBG = getRenderTime(); let scaleBG = state.bg.scale; let xOffBG = 0; let yOffBG = 0; let rotBG = 0; let alphaBG = 1; let filterBG = 'none';
+                let timeBG = getRenderTime(); let scaleBG = state.bg.scale; let xOffBG = 0; let yOffBG = 0; let rotBG = 0; let filterBG = 'none';
 
                 if (state.bg.effect === 'denyut') { let zoomBoost = Math.max(0, kickBassReactivity - 0.15); scaleBG = state.bg.scale + (zoomBoost * state.bg.pulseIntensity * 0.15); } 
                 else if (state.bg.effect === 'zoom') { scaleBG = state.bg.scale * (1 + (Math.sin(timeBG * 0.1) * 0.15 * state.bg.pulseIntensity)); } 
@@ -1551,48 +1670,74 @@
 
                 ctx.save(); ctx.translate(w / 2 + xOffBG, h / 2 + yOffBG); ctx.rotate(rotBG); 
                 let actualScaleX = scaleBG * (state.bg.mirror ? -1 : 1); ctx.scale(actualScaleX, scaleBG);
-                ctx.globalAlpha = alphaBG; ctx.filter = filterBG; ctx.drawImage(state.bg.imgElement, -drawW / 2, -drawH / 2, drawW, drawH); ctx.restore();
+                ctx.globalAlpha = specificAlpha; ctx.filter = filterBG; 
+                ctx.drawImage(element, -drawW / 2, -drawH / 2, drawW, drawH); 
+                ctx.restore();
+            };
+
+            if (state.bg.imgElement || bgPrevElement) {
+                ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+                
+                // Gambar background lama jika sedang transisi
+                if (bgPrevElement && isBgCrossfading) { drawBgItem(bgPrevElement, prevGlobalAlphaBG); }
+                // Gambar background baru
+                if (state.bg.imgElement) { drawBgItem(state.bg.imgElement, globalAlphaBG); }
                 
                 if (state.bg.darkness > 0) { ctx.fillStyle = `rgba(0,0,0,${state.bg.darkness})`; ctx.fillRect(0, 0, w, h); }
             } else if (state.bg.color !== '#0f1115' && state.bg.color !== 'transparent' && state.bg.color !== '') {
                 if (state.bg.darkness > 0) { ctx.fillStyle = `rgba(0,0,0,${state.bg.darkness})`; ctx.fillRect(0,0,w,h); } else if (state.bg.darkness < 0) { ctx.fillStyle = `rgba(255,255,255,${-state.bg.darkness})`; ctx.fillRect(0,0,w,h); }
             }
 
-            // Gambar Flash Beat Drop (Jika Aktif)
             if (beatDropFlashAlpha > 0) {
                 ctx.fillStyle = `rgba(255,255,255,${beatDropFlashAlpha})`;
                 ctx.fillRect(0, 0, w, h);
-                beatDropFlashAlpha -= 0.05 * (60 / state.render.fps); // Decay speed menyesuaikan FPS
+                beatDropFlashAlpha -= 0.05 * (60 / state.render.fps);
             }
 
-            ctx.imageSmoothingEnabled = false; let weatherSpeedMult = state.bg.weatherSpeed / 50; weatherSpeedMult *= 2;
+            ctx.imageSmoothingEnabled = false; 
+
+            // UPDATE: Perhitungan Cuaca Reaktif Audio
+            let activeSnowIntensity = state.bg.snowIntensity;
+            let finalWSpeed = (state.bg.weatherSpeed / 50) * 2;
+
+            if (state.bg.weatherReactive && kickBassReactivity > 0.4) {
+                let boost = (kickBassReactivity - 0.4) * 2; // dari 0 ke ~1.2
+                
+                // Slider Lebat mengatur seberapa banyak penambahan intensitas saat bass memukul
+                let lebatReactivityMultiplier = (state.bg.snowIntensity / 50) * 150; 
+                activeSnowIntensity = state.bg.snowIntensity + (boost * lebatReactivityMultiplier);
+                
+                // Slider Cepat mengatur seberapa besar lonjakan kecepatan saat bass memukul
+                let cepatReactivityMultiplier = (state.bg.weatherSpeed / 50) * 2.5;
+                finalWSpeed = finalWSpeed * (1 + boost * cepatReactivityMultiplier);
+            }
 
             if (state.bg.weather.includes('salju')) {
-                let currentMaxSnow = state.bg.snowIntensity * 4; let spawnChance = 0.9 - (state.bg.snowIntensity / 150);
-                if (snowflakes.length < currentMaxSnow && Math.random() > spawnChance) { let spawnCount = Math.ceil(state.bg.snowIntensity / 20); for(let k=0; k<spawnCount; k++) { if (snowflakes.length >= currentMaxSnow) break; snowflakes.push({ x: Math.random() * w, y: -10, r: Math.random() * 2 + 0.5, s: Math.random() * 1.5 + 0.5, vx: (Math.random() - 0.5) * 0.5, o: Math.random() * 0.5 + 0.2 }); } }
+                let currentMaxSnow = activeSnowIntensity * 4; let spawnChance = 0.9 - (activeSnowIntensity / 150);
+                if (snowflakes.length < currentMaxSnow && Math.random() > spawnChance) { let spawnCount = Math.ceil(activeSnowIntensity / 20); for(let k=0; k<spawnCount; k++) { if (snowflakes.length >= currentMaxSnow) break; snowflakes.push({ x: Math.random() * w, y: -10, r: Math.random() * 2 + 0.5, s: Math.random() * 1.5 + 0.5, vx: (Math.random() - 0.5) * 0.5, o: Math.random() * 0.5 + 0.2 }); } }
                 ctx.fillStyle = '#ffffff';
-                for (let i = snowflakes.length - 1; i >= 0; i--) { let p = snowflakes[i]; p.y += p.s * weatherSpeedMult; p.x += p.vx * weatherSpeedMult; ctx.globalAlpha = p.o; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, PI2); ctx.fill(); if (p.y > h || p.x < 0 || p.x > w) snowflakes.splice(i, 1); }
+                for (let i = snowflakes.length - 1; i >= 0; i--) { let p = snowflakes[i]; p.y += p.s * finalWSpeed; p.x += p.vx * finalWSpeed; ctx.globalAlpha = p.o; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, PI2); ctx.fill(); if (p.y > h || p.x < 0 || p.x > w) snowflakes.splice(i, 1); }
                 ctx.globalAlpha = 1.0;
             }
             if (state.bg.weather.includes('hujan_air')) {
-                let currentMaxRain = state.bg.snowIntensity * 6; let spawnChance = 0.8 - (state.bg.snowIntensity / 200);
-                if (raindrops.length < currentMaxRain && Math.random() > spawnChance) { let spawnCount = Math.ceil(state.bg.snowIntensity / 10); for(let k=0; k<spawnCount; k++) { if (raindrops.length >= currentMaxRain) break; raindrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 20 + 10, s: Math.random() * 10 + 15, o: Math.random() * 0.3 + 0.2 }); } }
+                let currentMaxRain = activeSnowIntensity * 6; let spawnChance = 0.8 - (activeSnowIntensity / 200);
+                if (raindrops.length < currentMaxRain && Math.random() > spawnChance) { let spawnCount = Math.ceil(activeSnowIntensity / 10); for(let k=0; k<spawnCount; k++) { if (raindrops.length >= currentMaxRain) break; raindrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 20 + 10, s: Math.random() * 10 + 15, o: Math.random() * 0.3 + 0.2 }); } }
                 ctx.strokeStyle = '#a0aec0'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
-                for (let i = raindrops.length - 1; i >= 0; i--) { let p = raindrops[i]; p.y += p.s * weatherSpeedMult; ctx.globalAlpha = p.o; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - (p.s * 0.1), p.y + p.len); ctx.stroke(); if (p.y > h) raindrops.splice(i, 1); }
+                for (let i = raindrops.length - 1; i >= 0; i--) { let p = raindrops[i]; p.y += p.s * finalWSpeed; ctx.globalAlpha = p.o; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - (p.s * 0.1), p.y + p.len); ctx.stroke(); if (p.y > h) raindrops.splice(i, 1); }
                 ctx.globalAlpha = 1.0;
             }
             if (state.bg.weather.includes('hujan_emas')) {
-                let currentMaxGold = state.bg.snowIntensity * 3; let spawnChance = 0.85 - (state.bg.snowIntensity / 200);
-                if (goldDrops.length < currentMaxGold && Math.random() > spawnChance) { let spawnCount = Math.ceil(state.bg.snowIntensity / 15); for(let k=0; k<spawnCount; k++) { if (goldDrops.length >= currentMaxGold) break; goldDrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 15 + 5, s: Math.random() * 5 + 8, o: Math.random() * 0.5 + 0.5, w: Math.random() * 2 + 1 }); } }
+                let currentMaxGold = activeSnowIntensity * 3; let spawnChance = 0.85 - (activeSnowIntensity / 200);
+                if (goldDrops.length < currentMaxGold && Math.random() > spawnChance) { let spawnCount = Math.ceil(activeSnowIntensity / 15); for(let k=0; k<spawnCount; k++) { if (goldDrops.length >= currentMaxGold) break; goldDrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 15 + 5, s: Math.random() * 5 + 8, o: Math.random() * 0.5 + 0.5, w: Math.random() * 2 + 1 }); } }
                 ctx.strokeStyle = '#fbbf24'; ctx.lineCap = 'round';
-                for (let i = goldDrops.length - 1; i >= 0; i--) { let p = goldDrops[i]; p.y += p.s * weatherSpeedMult; ctx.globalAlpha = p.o; ctx.lineWidth = p.w; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + p.len); ctx.stroke(); if (p.y > h) goldDrops.splice(i, 1); }
+                for (let i = goldDrops.length - 1; i >= 0; i--) { let p = goldDrops[i]; p.y += p.s * finalWSpeed; ctx.globalAlpha = p.o; ctx.lineWidth = p.w; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + p.len); ctx.stroke(); if (p.y > h) goldDrops.splice(i, 1); }
                 ctx.globalAlpha = 1.0;
             }
             if (state.bg.weather.includes('petir')) {
-                let strikeChance = 0.99 - (state.bg.snowIntensity / 1000) - (audioReactivity * 0.05); 
+                let strikeChance = 0.99 - (activeSnowIntensity / 1000) - (audioReactivity * 0.05); 
                 if (Math.random() > strikeChance) { let x = Math.random() * w; lightnings.push({ x: x, y: 0, segments: generateLightning(x, 0, h), life: 1.0, flash: Math.random() > 0.4 }); }
                 for (let i = lightnings.length - 1; i >= 0; i--) {
-                    let l = lightnings[i]; l.life -= 0.06 * weatherSpeedMult;
+                    let l = lightnings[i]; l.life -= 0.06 * finalWSpeed;
                     if (l.flash && l.life > 0.7) { ctx.fillStyle = `rgba(255, 255, 255, ${l.life * 0.2})`; ctx.fillRect(0, 0, w, h); }
                     ctx.beginPath(); ctx.strokeStyle = `rgba(220, 230, 255, ${l.life})`; ctx.lineWidth = 2 + (l.life * 2); ctx.shadowBlur = 10; ctx.shadowColor = "rgba(150, 180, 255, 0.8)";
                     if (l.segments.length > 0) { ctx.moveTo(l.segments[0].x, l.segments[0].y); for (let j = 1; j < l.segments.length; j++) { ctx.lineTo(l.segments[j].x, l.segments[j].y); } }
@@ -1602,10 +1747,10 @@
                 }
             }
             if (state.bg.weather.includes('asap') || state.bg.weather.includes('asap_warna')) {
-                let maxSmokes = state.bg.snowIntensity * 1.5; let spawnChance = 0.85 - (state.bg.snowIntensity / 300);
-                if (smokes.length < maxSmokes && Math.random() > spawnChance) { let spawnCount = Math.ceil(state.bg.snowIntensity / 20); for(let k=0; k<spawnCount; k++) { if (smokes.length >= maxSmokes) break; let hue = 0; if (state.bg.weather.includes('asap_warna')) { hue = (getRenderTime() * 1000 / 20 + Math.random() * 50) % 360; } smokes.push({ x: Math.random() * w, y: h + 50, r: Math.random() * 30 + 20, vx: (Math.random() - 0.5) * 1.5, vy: -(Math.random() * 2 + 1), life: 1.0, decay: Math.random() * 0.006 + 0.003, hue: hue }); } }
+                let maxSmokes = activeSnowIntensity * 1.5; let spawnChance = 0.85 - (activeSnowIntensity / 300);
+                if (smokes.length < maxSmokes && Math.random() > spawnChance) { let spawnCount = Math.ceil(activeSnowIntensity / 20); for(let k=0; k<spawnCount; k++) { if (smokes.length >= maxSmokes) break; let hue = 0; if (state.bg.weather.includes('asap_warna')) { hue = (getRenderTime() * 1000 / 20 + Math.random() * 50) % 360; } smokes.push({ x: Math.random() * w, y: h + 50, r: Math.random() * 30 + 20, vx: (Math.random() - 0.5) * 1.5, vy: -(Math.random() * 2 + 1), life: 1.0, decay: Math.random() * 0.006 + 0.003, hue: hue }); } }
                 for (let i = smokes.length - 1; i >= 0; i--) {
-                    let s = smokes[i]; s.x += s.vx * weatherSpeedMult * (1 + audioReactivity * 0.5); s.y += s.vy * weatherSpeedMult * (1 + audioReactivity * 0.5); s.r += 0.4 * weatherSpeedMult; s.life -= s.decay * weatherSpeedMult;
+                    let s = smokes[i]; s.x += s.vx * finalWSpeed * (1 + audioReactivity * 0.5); s.y += s.vy * finalWSpeed * (1 + audioReactivity * 0.5); s.r += 0.4 * finalWSpeed; s.life -= s.decay * finalWSpeed;
                     if (s.life > 0) { let grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r); if (state.bg.weather.includes('asap_warna')) { grad.addColorStop(0, `hsla(${s.hue}, 80%, 60%, ${s.life * 0.2})`); grad.addColorStop(1, `hsla(${s.hue}, 80%, 60%, 0)`); } else { grad.addColorStop(0, `rgba(180, 190, 200, ${s.life * 0.15})`); grad.addColorStop(1, `rgba(180, 190, 200, 0)`); } ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, PI2); ctx.fill(); }
                     if (s.life <= 0 || s.y < -s.r) smokes.splice(i, 1);
                 }
@@ -1697,26 +1842,22 @@
                     if (!isOfflineRendering) analyser.getByteFrequencyData(dataArray); 
                 }
                 else if (state.viz.type === 'circle_progress') {
-                    // FITUR BARU: CIRCULAR PROGRESS BARS
                     let radius = h * state.viz.size * 0.3 + 50; 
                     let barCount = 120;
                     let currentDur = audioElement.duration || (isOfflineRendering ? 100 : 1);
                     let curTime = isOfflineRendering ? window.offlineCurrentTime : audioElement.currentTime;
                     let progress = Math.min(1, curTime / currentDur);
                     
-                    // Lingkaran Dasar (Progress Track)
                     ctx.beginPath();
                     ctx.arc(currentCx, currentVizY, radius - 10, -Math.PI/2, Math.PI*1.5);
                     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
                     ctx.lineWidth = 4; ctx.stroke();
 
-                    // Lingkaran Progress (Terisi)
                     ctx.beginPath();
                     ctx.arc(currentCx, currentVizY, radius - 10, -Math.PI/2, (-Math.PI/2) + (progress * PI2));
                     ctx.strokeStyle = state.viz.colorMode === 'auto' ? `hsl(${baseHue}, 100%, 60%)` : baseColorStr;
                     ctx.lineWidth = 6; ctx.stroke();
 
-                    // Batang Spektrum
                     ctx.lineCap = 'round';
                     for (let i = 0; i < barCount; i++) {
                         let dataIndex = ~~(i * (dataArray.length / barCount) * 0.7);
@@ -1729,25 +1870,17 @@
                         let x2 = currentCx + Math.cos(angle) * (radius + barH);
                         let y2 = currentVizY + Math.sin(angle) * (radius + barH);
 
-                        ctx.beginPath();
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
+                        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
                         ctx.lineWidth = Math.max(2, (radius * PI2 / barCount) * 0.6 * state.viz.width);
                         
-                        if (state.viz.colorMode === 'custom') {
-                            ctx.strokeStyle = baseColorStr;
-                        } else {
-                            ctx.strokeStyle = `hsl(${(baseHue + i*(360/barCount))%360}, 100%, 60%)`;
-                        }
+                        if (state.viz.colorMode === 'custom') { ctx.strokeStyle = baseColorStr; } 
+                        else { ctx.strokeStyle = `hsl(${(baseHue + i*(360/barCount))%360}, 100%, 60%)`; }
                         ctx.stroke();
                     }
                     bboxes.viz = { x: currentCx - radius - (h*0.15), y: currentVizY - radius - (h*0.15), w: (radius + h*0.15)*2, h: (radius + h*0.15)*2 };
                 }
                 else if (state.viz.type.startsWith('modern')) {
-                    if (state.viz.type === 'modern_plexus') {
-                        // (Plexus logic omitted for brevity in mental sandbox, but maintained here)
-                    } 
-                    else if (state.viz.type === 'modern_cyber_bars') {
+                    if (state.viz.type === 'modern_cyber_bars') {
                         const barCount = 48; const totalW = w * screenWidthRatio; const spacing = totalW / barCount; let startX = currentCx - (totalW / 2); const maxH = h * state.viz.size;
                         if (!window.cyberCaps || window.cyberCaps.length !== barCount) { window.cyberCaps = new Array(barCount).fill(0); } ctx.shadowBlur = 10;
                         for (let i = 0; i < barCount; i++) {
@@ -1832,7 +1965,7 @@
                 let time = getRenderTime();
                 if (displayText !== lastTrackForText) { typewriterProgress = 0; lastTrackForText = displayText; textTransitionStart = time; }
 
-                let fontSize = state.textFx.size; let speedMult = (state.textFx.animSpeed !== undefined ? state.textFx.animSpeed : 50) / 50;
+                let fontSize = state.textFx.size * (h / 720); let speedMult = (state.textFx.animSpeed !== undefined ? state.textFx.animSpeed : 50) / 50;
                 let textX = cx + (state.textFx.offsetX || 0); let textY = (h * 0.15) + (state.textFx.offsetY || 0);
                 let baseTextHue = 0;
                 if (state.textFx.colorMode === 'auto') { baseTextHue = (time * (state.textFx.argbSpeed || 15)) % 360; state.textFx.color = `hsl(${baseTextHue}, 100%, 60%)`; } 
@@ -1868,8 +2001,8 @@
                 } else if (state.timeFx.format === 'countdown') {
                     if (audioElement.duration && !isNaN(audioElement.duration)) { let curTime = isOfflineRendering ? window.offlineCurrentTime : audioElement.currentTime; let sisa = Math.max(0, audioElement.duration - curTime); timeString = formatTime(sisa); } else { timeString = "00:00"; }
                 }
-                let fontSize = state.timeFx.size; let textX = cx + (state.timeFx.offsetX || 0); let textY = cy + (state.timeFx.offsetY || 0);
-                if (state.timeFx.offsetX === 0 && state.timeFx.offsetY === 0) { textX = w - 100; textY = 50; }
+                let fontSize = state.timeFx.size * (h / 720); let textX = cx + (state.timeFx.offsetX || 0); let textY = cy + (state.timeFx.offsetY || 0);
+                if (state.timeFx.offsetX === 0 && state.timeFx.offsetY === 0) { textX = w - (100 * (w / 1280)); textY = 50 * (h / 720); }
                 ctx.font = `bold ${fontSize}px ${state.timeFx.font}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(0, 0, 0, 0.7)'; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
                 ctx.globalAlpha = state.timeFx.opacity !== undefined ? state.timeFx.opacity : 1.0; ctx.fillStyle = state.timeFx.color; ctx.fillText(timeString, textX, textY);
                 let metrics = ctx.measureText(timeString); let textW = metrics.width; let textH = fontSize; bboxes.time = { x: textX - (textW / 2), y: textY - (textH / 2), w: textW, h: textH }; ctx.restore();
@@ -1877,7 +2010,7 @@
 
             if (state.playlistFx.enabled && playlist.length > 0) {
                 ctx.save();
-                let fontSize = state.playlistFx.size; let fontStyle = '';
+                let fontSize = state.playlistFx.size * (h / 720); let fontStyle = '';
                 if (state.playlistFx.italic) fontStyle += 'italic '; if (state.playlistFx.bold) fontStyle += 'bold ';
                 let fontStr = `${fontStyle}${fontSize}px ${state.playlistFx.font}, sans-serif`;
                 ctx.font = fontStr; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
@@ -1894,7 +2027,7 @@
                 }
 
                 let timePL = getRenderTime(); let intensity = state.playlistFx.fxIntensity !== undefined ? state.playlistFx.fxIntensity : 0.5;
-                let startX = 40 + (state.playlistFx.offsetX || 0); let startY = 40 + (state.playlistFx.offsetY || 0);
+                let startX = (40 * (w / 1280)) + (state.playlistFx.offsetX || 0); let startY = (40 * (h / 720)) + (state.playlistFx.offsetY || 0);
                 let scaleW = state.playlistFx.scaleWidth !== undefined ? state.playlistFx.scaleWidth : 1.0; let scaleH = state.playlistFx.scaleHeight !== undefined ? state.playlistFx.scaleHeight : 1.0;
                 let animScale = 1; let animX = 0; let animY = 0; let animRot = 0;
 
@@ -1903,11 +2036,10 @@
                 else if (state.playlistFx.effect === 'ayun') { animX = Math.sin(timePL * 1.5) * (30 * intensity); animY = Math.cos(timePL * 1.2) * (20 * intensity); animRot = Math.sin(timePL * 1.0) * (0.05 * intensity); }
 
                 ctx.translate(startX + animX, startY + animY); ctx.rotate(animRot); ctx.scale(scaleW * animScale, scaleH * animScale);
-                let padding = 10; let requiredW = maxTextWidth + padding * 2;
+                let padding = 10 * (h / 720); let requiredW = maxTextWidth + padding * 2;
                 let anchorX = padding; if ((state.playlistFx.align || 'left') === 'center') anchorX = requiredW / 2; else if (state.playlistFx.align === 'right') anchorX = requiredW - padding;
                 let anchorY = padding;
 
-                // Masking Background Playlist
                 if (state.playlistFx.maskEnabled) {
                     ctx.save(); let maskOp = state.playlistFx.maskOpacity !== undefined ? state.playlistFx.maskOpacity : 0.7; let maskPrs = state.playlistFx.maskPrecision !== undefined ? state.playlistFx.maskPrecision : 1.0;
                     let mPadX = 15; let mPadTop = 5; let mPadBottom = -10; 
@@ -1962,7 +2094,6 @@
                 bboxes.playlist = { x: bboxX, y: startY, w: maxTextWidth * scaleW, h: totalHeight * scaleH }; ctx.restore();
             }
             
-            // FITUR BARU: SMART TOAST "UP NEXT"
             if (state.playlistFx.upNextToast && playlist.length > 1 && currentTrackIndex < playlist.length - 1) {
                 let curTime = isOfflineRendering ? window.offlineCurrentTime : audioElement.currentTime;
                 let dur = audioElement.duration || (isOfflineRendering ? 100 : 0);
@@ -1970,48 +2101,46 @@
                 
                 if (dur > 0 && timeLeft <= 10 && timeLeft >= 0) {
                     let nextTrackName = playlist[currentTrackIndex + 1].file.name.replace(/\.[^/.]+$/, "");
-                    let toastW = 400; let toastH = 80; let toastX = w - toastW - 40; let toastY = h - toastH - 40;
+                    let resScale = h / 720;
+                    let toastW = 400 * resScale; let toastH = 80 * resScale; let toastX = w - toastW - (40 * resScale); let toastY = h - toastH - (40 * resScale);
                     let slideProgress = Math.min(1, (10 - timeLeft) / 1.0); 
-                    let slideY = (1 - Math.pow(slideProgress - 1, 3)) * toastH; // ease out cubic
+                    let slideY = (1 - Math.pow(slideProgress - 1, 3)) * toastH; 
                     
                     ctx.save();
                     ctx.translate(toastX, toastY + toastH - slideY);
                     
-                    // Box
                     ctx.fillStyle = 'rgba(15, 17, 21, 0.9)';
                     ctx.strokeStyle = state.viz.staticColor || '#facc15';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.roundRect(0, 0, toastW, toastH, 12); ctx.fill(); ctx.stroke();
+                    ctx.lineWidth = 2 * resScale;
+                    ctx.beginPath(); ctx.roundRect(0, 0, toastW, toastH, 12 * resScale); ctx.fill(); ctx.stroke();
                     
-                    // Teks "Lagu Berikutnya"
                     ctx.fillStyle = '#94a3b8';
-                    ctx.font = '14px Inter'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-                    ctx.fillText("Lagu Berikutnya:", 20, 15);
+                    ctx.font = `${14 * resScale}px Inter`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+                    ctx.fillText("Lagu Berikutnya:", 20 * resScale, 15 * resScale);
                     
-                    // Nama Lagu Berikutnya
                     ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 20px Inter';
+                    ctx.font = `bold ${20 * resScale}px Inter`;
                     
-                    // Potong nama lagu jika terlalu panjang
-                    if (ctx.measureText(nextTrackName).width > toastW - 40) {
-                        while (ctx.measureText(nextTrackName + '...').width > toastW - 40 && nextTrackName.length > 0) {
+                    if (ctx.measureText(nextTrackName).width > toastW - (40 * resScale)) {
+                        while (ctx.measureText(nextTrackName + '...').width > toastW - (40 * resScale) && nextTrackName.length > 0) {
                             nextTrackName = nextTrackName.slice(0, -1);
                         }
                         nextTrackName += '...';
                     }
-                    ctx.fillText(nextTrackName, 20, 40);
+                    ctx.fillText(nextTrackName, 20 * resScale, 40 * resScale);
                     
-                    // Progress Bar kecil di bawah
                     ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                    ctx.fillRect(0, toastH - 4, toastW, 4);
+                    ctx.fillRect(0, toastH - (4 * resScale), toastW, 4 * resScale);
                     ctx.fillStyle = state.viz.staticColor || '#facc15';
-                    ctx.fillRect(0, toastH - 4, toastW * (1 - (timeLeft / 10)), 4);
+                    ctx.fillRect(0, toastH - (4 * resScale), toastW * (1 - (timeLeft / 10)), 4 * resScale);
                     
                     ctx.restore();
                 }
             }
 
             if (state.overlay.lapisan === 'depan' || state.overlay.lapisan === 'kunci') drawOverlayObj();
+            
+            ctx.restore();
         }
 
         let draggingElement = null; let dragStartX = 0; let dragStartY = 0; let initialOffsetX = 0; let initialOffsetY = 0; const undoStack = []; const MAX_UNDO = 20;
@@ -2033,6 +2162,10 @@
             setVal('snowIntensitySlider', state.bg.snowIntensity); setVal('weatherSpeedSlider', state.bg.weatherSpeed); setCheck('bgMirrorEnable', state.bg.mirror); setBtn('bgEffectGroup', state.bg.effect); setVal('bgDarknessSlider', state.bg.darkness * 100); setVal('bgPulseIntensitySlider', state.bg.pulseIntensity * 100); setVal('bgScaleSlider', state.bg.scale * 100);
             
             setCheck('beatDropFxEnable', state.bg.beatDropFx); setCheck('autoSlideshowEnable', state.bg.autoSlideshow); setVal('slideshowIntervalInput', state.bg.slideshowInterval);
+            
+            // Binding UI Baru
+            setCheck('bgCrossfadeEnable', state.bg.crossfade);
+            setCheck('weatherReactiveEnable', state.bg.weatherReactive);
 
             setVal('overlaySize', state.overlay.size * 100); setVal('overlayOpacity', state.overlay.opacity * 100); setVal('overlaySpeed', state.overlay.speed * 100); setBtn('overlayBlendGroup', state.overlay.blend); setBtn('overlayAnimGroup', state.overlay.anim);
             setCheck('textEnable', state.textFx.enabled); setVal('textCustomInput', state.textFx.customText); setVal('textFontSelect', state.textFx.font); setBtn('textColorModeGroup', state.textFx.colorMode); setVal('textColorPicker', state.textFx.color); setVal('textArgbSpeedSlider', state.textFx.argbSpeed); setVal('textSizeSlider', state.textFx.size); setBtn('textAlignGroup', state.textFx.align); setBtn('textEffectGroup', state.textFx.effect); setVal('textIntensitySlider', state.textFx.intensity); setBtn('textAnimGroup', state.textFx.anim); setVal('textAnimSpeedSlider', state.textFx.animSpeed);
@@ -2062,7 +2195,9 @@
         if (leftSidebarEl) { leftSidebarEl.addEventListener('mousedown', (e) => { if(e.target.closest('input, select, button, label')) saveStateSnapshot(); }); leftSidebarEl.addEventListener('keydown', (e) => { if(e.target.tagName === 'INPUT' && !e.ctrlKey) saveStateSnapshot(); }); }
 
         function getCanvasMousePos(evt) {
-            const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+            const rect = canvas.getBoundingClientRect(); 
+            const scaleX = 1280 / rect.width; 
+            const scaleY = 720 / rect.height;
             const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX; const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
             return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
         }
@@ -2110,17 +2245,14 @@
             if (e.ctrlKey && e.code === 'KeyZ') { if (!isInput) { e.preventDefault(); performUndo(); } }
         });
 
-        // --- MESIN RATING KEUNIKAN KONTEN (STANDAR MONETISASI) ---
         function updateUniquenessScore() {
             try {
-                let score = 0; // Mulai dari 0% saat aplikasi baru dibuka
+                let score = 0; 
                 
                 if (typeof state !== 'undefined' && typeof playlist !== 'undefined') {
-                    // Baru mulai menghitung jika sudah ada lagu yang dimasukkan
                     if (playlist.length > 0) {
-                        score = 20; // Nilai dasar (layar + audio)
+                        score = 20; 
                         
-                        // 1. Cek Latar Belakang & Efek
                         if (state.bg) {
                             if (state.bg.imgElement) score += 15;
                             else if (state.bg.color !== '#0f1115') score += 5;
@@ -2128,17 +2260,20 @@
                             if (state.bg.autoSlideshow) score += 15;
                             if (state.bg.beatDropFx) score += 10;
                             if (state.bg.effect !== 'normal') score += 5;
-                            if (state.bg.weather && state.bg.weather.length > 0 && !state.bg.weather.includes('normal')) score += 10;
+                            if (state.bg.weather && state.bg.weather.length > 0 && !state.bg.weather.includes('normal')) {
+                                score += 10;
+                                // Bonus poin jika cuaca reaktif audio
+                                if (state.bg.weatherReactive) score += 10;
+                            }
                         }
                         
-                        // 2. Cek Visualizer
                         if (state.viz && state.viz.enabled) {
                             score += 15;
                             if (state.viz.type !== 'bars') score += 5;
                         }
                         
-                        // 3. Cek Teks & Overlay
                         if (state.textFx && state.textFx.enabled) score += 5;
+                        
                         if (state.timeFx && state.timeFx.enabled) score += 5;
                         if (state.playlistFx && state.playlistFx.enabled) score += 5;
                     }
@@ -2154,13 +2289,13 @@
                     txt.textContent = score + '%';
                     
                     if (score < 50) {
-                        bar.style.backgroundColor = '#ef4444'; // Merah
+                        bar.style.backgroundColor = '#ef4444'; 
                         txt.style.color = '#ef4444';
                     } else if (score < 80) {
-                        bar.style.backgroundColor = '#eab308'; // Kuning
+                        bar.style.backgroundColor = '#eab308'; 
                         txt.style.color = '#eab308';
                     } else {
-                        bar.style.backgroundColor = '#22c55e'; // Hijau
+                        bar.style.backgroundColor = '#22c55e'; 
                         txt.style.color = '#22c55e';
                     }
                 }
@@ -2169,11 +2304,9 @@
             }
         }
         
-        // Jalankan pengecekan real-time
         setInterval(updateUniquenessScore, 1000);
         setTimeout(updateUniquenessScore, 500);
 
-        // Mendaftarkan Service Worker untuk PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
