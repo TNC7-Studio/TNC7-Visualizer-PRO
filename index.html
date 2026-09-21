@@ -27,7 +27,7 @@
             --text-secondary: #94a3b8;
             --accent-yellow: #f59e0b;
             --accent-blue: #3b82f6;
-            --accent-red: #ef4444;
+            --accent-red: #dc2626;
             --btn-bg: #1e2430;
             --btn-hover: #2d3748;
         }
@@ -84,8 +84,8 @@
         }
         .btn-custom:hover { background-color: var(--btn-hover); }
         .btn-active { background-color: #facc15; border-color: #facc15; color: #0f1115; font-weight: 600; }
-        .btn-danger { border-color: rgba(239, 68, 68, 0.5); color: var(--accent-red); }
-        .btn-danger:hover { background-color: rgba(239, 68, 68, 0.1); }
+        .btn-danger { border-color: rgba(220, 38, 38, 0.5); color: var(--accent-red); }
+        .btn-danger:hover { background-color: rgba(220, 38, 38, 0.1); }
 
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 3px; border-radius: 2px; }
         input[type=range]::-webkit-slider-thumb {
@@ -137,11 +137,11 @@
         .img-playlist-item.active { border-color: var(--accent-yellow); background-color: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-yellow); }
         .playlist-item-name, .img-playlist-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 8px; }
         .remove-track-btn { color: var(--accent-red); cursor: pointer; padding: 6px 10px; border-radius: 4px; background: transparent; border: none; outline: none; transition: background-color 0.2s; display: flex; align-items: center; justify-content: center; }
-        .remove-track-btn:hover { background-color: rgba(239, 68, 68, 0.2); }
+        .remove-track-btn:hover { background-color: rgba(220, 38, 38, 0.2); }
         .drag-over { border-color: #facc15 !important; background-color: rgba(245, 158, 11, 0.05) !important; transition: all 0.2s ease; }
         .img-playlist-thumb { width: 40px; height: 24px; object-fit: cover; border-radius: 2px; margin-right: 8px; flex-shrink: 0; background-color: #000; }
         
-        #window-top-bar { position: fixed; top: 0; left: 0; right: 0; height: 12px; background-color: #22c55e; z-index: 10000; -webkit-app-region: drag; }
+        #window-top-bar { position: fixed; top: 0; left: 0; right: 0; height: 12px; background-color: #dc2626; z-index: 10000; -webkit-app-region: drag; }
         
         input[type=range].hidden + .val-indicator, input[type=range].hidden ~ .reset-slider-btn { display: none !important; }
 
@@ -155,14 +155,14 @@
     
     <!-- Lock Screen -->
     <div id="lock-screen" class="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0f1115] transition-opacity duration-500">
-        <div class="bg-[#161a22] border border-[#2a3142] p-8 rounded-xl shadow-2xl flex flex-col items-center max-w-sm w-full">
-            <i class="fa-solid fa-lock text-yellow-400 text-4xl mb-4"></i>
-            <h2 class="text-white text-xl font-bold mb-6 tracking-widest">SYSTEM LOCKED</h2>
+        <div class="bg-[#161a22] border border-red-500/30 shadow-[0_0_25px_rgba(220,38,38,0.15)] p-8 rounded-xl flex flex-col items-center max-w-sm w-full transition-all">
+            <i class="fa-solid fa-lock text-red-500 text-4xl mb-4 drop-shadow-[0_0_10px_rgba(220,38,38,0.6)]"></i>
+            <h2 class="text-white text-xl font-bold mb-6 tracking-widest drop-shadow-[0_0_5px_rgba(220,38,38,0.3)]">SYSTEM LOCKED</h2>
             <div class="w-full flex gap-2">
-                <input type="password" id="pin-input" class="flex-1 bg-[#0f1115] border border-[#2a3142] text-white text-center text-lg rounded px-4 py-2 outline-none focus:border-yellow-400 transition-colors" placeholder="Masukkan PIN" autocomplete="off">
-                <button id="pin-submit" class="bg-[#1e2430] hover:bg-[#2d3748] border border-[#2a3142] text-white rounded px-6 py-2 transition-colors focus:outline-none focus:border-yellow-400 font-bold"><i class="fa-solid fa-arrow-right"></i></button>
+                <input type="password" id="pin-input" class="flex-1 bg-[#0f1115] border border-[#2a3142] text-white text-center text-lg rounded px-4 py-2 outline-none focus:border-red-500 focus:shadow-[0_0_15px_rgba(220,38,38,0.4)] transition-all duration-300" placeholder="Masukkan PIN" autocomplete="off">
+                <button id="pin-submit" class="bg-[#1e2430] hover:bg-[#2d3748] border border-[#2a3142] hover:border-red-500/50 text-white rounded px-6 py-2 transition-all duration-300 focus:outline-none focus:border-red-500 focus:shadow-[0_0_15px_rgba(220,38,38,0.4)] font-bold"><i class="fa-solid fa-arrow-right"></i></button>
             </div>
-            <p id="pin-error" class="text-red-500 text-xs mt-3 opacity-0 transition-opacity">Akses Ditolak. PIN Salah.</p>
+            <p id="pin-error" class="text-red-500 text-xs mt-3 opacity-0 transition-opacity drop-shadow-[0_0_5px_rgba(220,38,38,0.5)]">Akses Ditolak. PIN Salah.</p>
         </div>
     </div>
 
@@ -204,12 +204,13 @@
                 <span class="text-[10px] font-bold text-gray-500 tracking-wider mr-1">BITRATE:</span>
                 <button class="btn-custom btn-active" data-val="variable">VBR</button>
                 <button class="btn-custom" data-val="constant">CBR</button>
-                <select id="renderBitrateSelect" class="custom-select w-[70px] ml-1">
-                    <option value="1500000">1.5 Mbps</option>
-                    <option value="2500000">2.5 Mbps</option>
+                <select id="renderBitrateSelect" class="custom-select w-[80px] ml-1">
+                    <option value="3000000">3.0 Mbps</option>
                     <option value="4000000">4.0 Mbps</option>
                     <option value="6000000">6.0 Mbps</option>
                     <option value="8000000">8.0 Mbps</option>
+                    <option value="10000000">10.0 Mbps</option>
+                    <option value="12000000">12.0 Mbps</option>
                 </select>
                 <select id="renderMethodSelect" class="custom-select w-20 ml-1">
                     <option value="pisah">Pisah File</option>
@@ -568,7 +569,7 @@
                             <option value="arrow">➔ Panah</option>
                             <option value="dot">● Titik Modern</option>
                         </select>
-                        <input type="color" id="playlistIconColorPicker" value="#ef4444" class="w-6 h-4 rounded cursor-pointer border-0 p-0 bg-transparent" title="Warna Ikon">
+                        <input type="color" id="playlistIconColorPicker" value="#22c55e" class="w-6 h-4 rounded cursor-pointer border-0 p-0 bg-transparent" title="Warna Ikon">
                     </div>
                 </div>
 
@@ -684,13 +685,13 @@
 
         <div class="main-content">
             <div class="preview-container" id="canvas-wrapper">
-                <div id="recording-indicator" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0f1115]/90 backdrop-blur-md text-white px-8 py-6 rounded-2xl z-50 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(239,68,68,0.2)] border border-gray-700 flex flex-col gap-2 items-center min-w-[340px] transform transition-all">
+                <div id="recording-indicator" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#0f1115]/90 backdrop-blur-md text-white px-8 py-6 rounded-2xl z-50 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(220,38,38,0.2)] border border-gray-700 flex flex-col gap-2 items-center min-w-[340px] transform transition-all">
                     <div class="relative flex items-center justify-center w-12 h-12 mb-2">
                         <div class="absolute w-full h-full border-4 border-gray-600 border-t-red-500 rounded-full animate-spin"></div>
                         <div class="absolute w-6 h-6 bg-red-500/30 rounded-full animate-ping"></div>
                         <i class="fa-solid fa-compact-disc text-red-500 animate-pulse text-sm"></i>
                     </div>
-                    <span id="recording-status" class="text-xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-yellow-400 drop-shadow-sm uppercase text-center">SIAP...</span>
+                    <span id="recording-status" class="text-xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-yellow-400 drop-shadow-sm uppercase text-center">SIAP...</span>
                     <div class="bg-gray-800/60 rounded-lg px-4 py-2 mt-2 border border-gray-700/50 w-full text-center shadow-inner">
                         <span id="recording-playlist-status" class="text-[11px] text-gray-300 font-medium tracking-wide"></span>
                     </div>
@@ -704,16 +705,17 @@
                     <div id="playPauseBtn" class="play-btn-circle">
                         <i class="fa-solid fa-play ml-1"></i>
                     </div>
-                    <div class="flex-1 flex flex-col gap-1 w-full overflow-hidden">
-                        <div class="flex justify-between text-xs text-gray-400">
-                            <span id="player-title" class="hidden">Belum ada audio</span>
-                            <span id="track-name-display" class="font-medium truncate flex-1 mr-4 text-white">Belum ada audio</span>
-                            <span id="time-display" class="whitespace-nowrap">00:00 / 00:00</span>
+                    <div class="flex flex-col flex-1 h-full justify-center gap-1">
+                        <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium px-1">
+                            <span id="player-title" class="truncate max-w-[200px] text-red-500 font-bold">Belum ada audio</span>
+                            <span id="time-display">00:00 / 00:00</span>
                         </div>
-                        <div id="progress-container" class="h-2 bg-[#2a3142] rounded-full cursor-pointer relative mt-1">
-                            <div id="progress-bar" class="h-full bg-[#facc15] rounded-full w-0 pointer-events-none"></div>
-                            <div id="progress-handle" class="w-3 h-3 bg-white rounded-full absolute top-1/2 -translate-y-1/2 -ml-1.5 left-0 pointer-events-none shadow-md"></div>
+                        <div class="w-full bg-gray-700 h-1.5 rounded-full relative cursor-pointer group" id="progress-container">
+                            <div class="h-full bg-red-600 rounded-full w-0 relative" id="progress-bar">
+                                <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_5px_rgba(255,255,255,0.8)] opacity-0 group-hover:opacity-100 transition-opacity translate-x-1/2" id="progress-handle"></div>
+                            </div>
                         </div>
+                        <span id="track-name-display" class="hidden"></span>
                     </div>
                 </div>
             </div>
@@ -779,8 +781,8 @@
             overlay: { element: null, type: null, lapisan: 'depan', blend: 'normal', size: 0.5, opacity: 1, speed: 0.5, anim: 'none', offsetX: 0, offsetY: 0, animTime: 0, lastDrawTime: 0 },
             textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50 },
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
-            playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#ef4444', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
-            render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 2500000, method: 'pisah' }
+            playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
+            render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 3000000, method: 'pisah' }
         };
 
         let bboxes = { viz: null, overlay: null, text: null, time: null, playlist: null };
@@ -2035,7 +2037,7 @@
             setVal('overlaySize', state.overlay.size * 100); setVal('overlayOpacity', state.overlay.opacity * 100); setVal('overlaySpeed', state.overlay.speed * 100); setBtn('overlayBlendGroup', state.overlay.blend); setBtn('overlayAnimGroup', state.overlay.anim);
             setCheck('textEnable', state.textFx.enabled); setVal('textCustomInput', state.textFx.customText); setVal('textFontSelect', state.textFx.font); setBtn('textColorModeGroup', state.textFx.colorMode); setVal('textColorPicker', state.textFx.color); setVal('textArgbSpeedSlider', state.textFx.argbSpeed); setVal('textSizeSlider', state.textFx.size); setBtn('textAlignGroup', state.textFx.align); setBtn('textEffectGroup', state.textFx.effect); setVal('textIntensitySlider', state.textFx.intensity); setBtn('textAnimGroup', state.textFx.anim); setVal('textAnimSpeedSlider', state.textFx.animSpeed);
             setCheck('timeEnable', state.timeFx.enabled); setBtn('timeFormatGroup', state.timeFx.format); setVal('timeFontSelect', state.timeFx.font); setVal('timeColorPicker', state.timeFx.color); setVal('timeSizeSlider', state.timeFx.size); setVal('timeOpacitySlider', state.timeFx.opacity * 100);
-            setCheck('playlistFxEnable', state.playlistFx.enabled); setVal('playlistFontSelect', state.playlistFx.font); setVal('playlistSizeSlider', state.playlistFx.size); setVal('playlistFxIntensitySlider', (state.playlistFx.fxIntensity !== undefined ? state.playlistFx.fxIntensity : 0.5) * 100); setVal('playlistScaleWidthSlider', state.playlistFx.scaleWidth * 100); setVal('playlistScaleHeightSlider', state.playlistFx.scaleHeight * 100); setVal('playlistColorPicker', state.playlistFx.color); setVal('playlistActiveColorPicker', state.playlistFx.activeColor); setVal('playlistBlinkSlider', state.playlistFx.blinkIntensity); setBtn('playlistAlignGroup', state.playlistFx.align); setVal('playlistTransformGroup', state.playlistFx.transform); setBtn('playlistEffectGroup', state.playlistFx.effect); setBtn('playlistBlinkModeGroup', state.playlistFx.blinkMode); setVal('playlistIconSelect', state.playlistFx.icon); setVal('playlistIconColorPicker', state.playlistFx.iconColor || '#ef4444'); setVal('playlistMaskColorPicker', state.playlistFx.maskColor || '#000000'); setVal('playlistMaskPrecisionSlider', (state.playlistFx.maskPrecision !== undefined ? state.playlistFx.maskPrecision : 1.0) * 100);
+            setCheck('playlistFxEnable', state.playlistFx.enabled); setVal('playlistFontSelect', state.playlistFx.font); setVal('playlistSizeSlider', state.playlistFx.size); setVal('playlistFxIntensitySlider', (state.playlistFx.fxIntensity !== undefined ? state.playlistFx.fxIntensity : 0.5) * 100); setVal('playlistScaleWidthSlider', state.playlistFx.scaleWidth * 100); setVal('playlistScaleHeightSlider', state.playlistFx.scaleHeight * 100); setVal('playlistColorPicker', state.playlistFx.color); setVal('playlistActiveColorPicker', state.playlistFx.activeColor); setVal('playlistBlinkSlider', state.playlistFx.blinkIntensity); setBtn('playlistAlignGroup', state.playlistFx.align); setVal('playlistTransformGroup', state.playlistFx.transform); setBtn('playlistEffectGroup', state.playlistFx.effect); setBtn('playlistBlinkModeGroup', state.playlistFx.blinkMode); setVal('playlistIconSelect', state.playlistFx.icon); setVal('playlistIconColorPicker', state.playlistFx.iconColor || '#dc2626'); setVal('playlistMaskColorPicker', state.playlistFx.maskColor || '#000000'); setVal('playlistMaskPrecisionSlider', (state.playlistFx.maskPrecision !== undefined ? state.playlistFx.maskPrecision : 1.0) * 100);
             setCheck('playlistUpNextEnable', state.playlistFx.upNextToast);
             
             const btnPItalic = document.getElementById('btnPlaylistItalic'); if(btnPItalic) { if(state.playlistFx.italic) btnPItalic.classList.add('btn-active'); else btnPItalic.classList.remove('btn-active'); }
