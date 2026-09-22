@@ -169,6 +169,39 @@
 
     <div id="notification-modal">Pesan Notifikasi</div>
 
+    <!-- Modal Lirik LRC -->
+    <div id="lrc-modal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="bg-[#161a22] border border-[#2a3142] p-4 rounded-xl flex flex-col max-w-2xl w-full h-[80vh] shadow-2xl">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-white font-bold"><i class="fa-solid fa-pen-to-square text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]"></i> Edit Lirik (LRC)</h3>
+                <button id="close-lrc-modal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="flex justify-between items-center bg-gray-800/80 p-2 rounded mb-2 border border-gray-700 shadow-inner">
+                <span class="text-[10px] text-gray-300">Tips: Putar lagu, klik baris lirik, tekan <kbd class="bg-gray-900 border border-gray-600 px-1.5 py-0.5 rounded text-yellow-400 font-bold shadow-[0_0_5px_rgba(250,204,21,0.3)]">F9</kbd> untuk menge-pas-kan waktu.</span>
+                <div class="flex gap-1">
+                    <button id="btn-shift-minus" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] transition-colors" title="Mundurkan baris terpilih 0.5 detik">-0.5s</button>
+                    <button id="btn-shift-plus" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] transition-colors" title="Majukan baris terpilih 0.5 detik">+0.5s</button>
+                    <button id="btn-tap-mode" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] transition-colors shadow-inner border border-gray-600" title="Gunakan tombol Spasi untuk men-stamp waktu dengan cepat"><i class="fa-solid fa-hand-pointer"></i> Mode Spasi: OFF</button>
+                    <button id="btn-stamp-time" class="bg-yellow-600 hover:bg-yellow-500 text-gray-900 px-3 py-1 rounded text-[10px] font-bold transition-colors shadow-[0_0_8px_rgba(250,204,21,0.4)]"><i class="fa-solid fa-stopwatch"></i> Stamp (F9)</button>
+                </div>
+            </div>
+
+            <div class="relative flex-1 w-full bg-[#0f1115] border border-[#2a3142] rounded overflow-hidden focus-within:border-yellow-400 focus-within:shadow-[0_0_15px_rgba(250,204,21,0.15)] transition-all">
+                <div id="lrc-highlight-backdrop" class="absolute inset-0 p-3 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words font-mono text-sm text-gray-300 pointer-events-none" aria-hidden="true"></div>
+                <textarea id="lrc-textarea" class="absolute inset-0 w-full h-full p-3 bg-transparent text-transparent caret-white font-mono text-sm outline-none resize-none whitespace-pre-wrap break-words" spellcheck="false" placeholder="[00:00.00] Baris lirik..."></textarea>
+            </div>
+            
+            <div class="mt-4 flex justify-between items-center">
+                <span class="text-xs text-gray-500">Format: [mm:ss.xx] Teks lirik</span>
+                <div class="flex gap-2">
+                    <button id="btn-sync-offset" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs transition-colors"><i class="fa-solid fa-clock"></i> Sesuaikan Waktu</button>
+                    <button id="save-lrc-btn" class="bg-red-600 hover:bg-red-500 text-white px-6 py-1.5 rounded font-bold transition-colors">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="top-bar" style="margin-top: 12px;">
         <div class="flex items-center gap-4">
             <div class="logo">
@@ -615,6 +648,137 @@
                 </div>
             </div>
 
+            <!-- Panel Lirik / Lyrics -->
+            <div class="panel border-red-900/50">
+                <div class="panel-header-container" style="background-color: #dc2626; border-radius: 4px; padding: 2px 4px;">
+                    <span class="text-[0.6rem] font-bold text-white tracking-widest uppercase">LIRIK / LYRICS</span>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="lyricsEnable" class="rounded border-white bg-red-700 text-white focus:ring-white h-2 w-2" style="accent-color: white;">
+                        <span class="text-[9px] text-white font-bold uppercase">Tampilkan</span>
+                    </label>
+                </div>
+                
+                <div class="border border-blue-900/60 bg-blue-900/10 rounded p-1 mt-1 flex flex-col gap-1">
+                    <span class="text-[9px] text-blue-400 font-bold tracking-wider"><i class="fa-solid fa-cloud-arrow-down"></i> CARI LIRIK MENTAH (INTERNET)</span>
+                    <div class="flex gap-1">
+                        <input type="text" id="lyricsSearchInput" class="custom-input flex-1 border-blue-800/50 text-[10px]" placeholder="Judul Lagu / Penyanyi">
+                        <button class="bg-blue-600 hover:bg-blue-500 text-white rounded px-3 text-[10px] transition-colors" id="btnSearchLyrics"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                
+                <button class="btn-custom w-full mt-1 border-[#ca8a04]/50 text-[#eab308] hover:bg-[#ca8a04]/10 py-1" id="btnEditLrc">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Teks Lirik (LRC) Manual
+                </button>
+                
+                <div class="flex items-center gap-1 mt-1 bg-gray-800/50 p-1 rounded border border-gray-700">
+                    <label class="flex items-center gap-1 cursor-pointer flex-1">
+                        <input type="checkbox" id="liveSyncToggle" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
+                        <span class="text-[9px] text-yellow-400 font-bold uppercase tracking-wider">🔴 Live Sync (Panel)</span>
+                    </label>
+                    <button id="btnResetSync" class="btn-custom hidden text-[8px] border-red-500/50 text-red-400 px-1 py-0" title="Hapus semua waktu lirik (Mulai ulang)">Reset</button>
+                </div>
+                
+                <div id="liveSyncPanel" class="hidden flex-col gap-1 mt-0.5 border border-yellow-700/50 bg-yellow-900/10 p-1.5 rounded">
+                    <div class="flex justify-between items-end mb-0.5">
+                        <span class="text-[8px] text-gray-400 font-bold">BARIS SELANJUTNYA:</span>
+                        <span id="syncProgressText" class="text-[8px] text-yellow-500 font-bold">0/0</span>
+                    </div>
+                    <div class="bg-black/60 border border-gray-700 p-1 rounded min-h-[20px] flex items-center justify-center shadow-inner">
+                        <span id="syncNextLine" class="text-[10px] text-white font-bold text-center leading-tight">Pilih lagu & tempel lirik...</span>
+                    </div>
+                    <div class="flex gap-1 mt-1">
+                        <button id="btnSyncPrev" class="btn-custom bg-gray-700 px-2 py-1" title="Mundur 1 baris"><i class="fa-solid fa-angle-up text-[10px]"></i></button>
+                        <button id="btnSyncStamp" class="btn-custom flex-1 bg-yellow-600 hover:bg-yellow-500 text-black font-bold border-yellow-500 shadow-[0_0_8px_rgba(250,204,21,0.4)] transition-all">
+                            STAMP (Spasi)
+                        </button>
+                        <button id="btnSyncNext" class="btn-custom bg-gray-700 px-2 py-1" title="Lewati 1 baris"><i class="fa-solid fa-angle-down text-[10px]"></i></button>
+                    </div>
+                    <span class="text-[7.5px] text-gray-400 text-center mt-0.5"><i class="fa-solid fa-bolt text-yellow-500"></i> Kompensasi presisi vokal otomatis aktif</span>
+                </div>
+                
+                <div class="text-center mt-1">
+                    <span class="text-[9px] text-gray-500 font-bold" id="lyricsStatusText">Belum ada lirik.</span>
+                </div>
+                
+                <div class="control-row mt-1">
+                    <span class="control-label text-[9px] w-10">Font</span>
+                    <div class="flex-1">
+                        <select class="custom-select" id="lyricsFontSelect">
+                            <option value="Inter">Inter</option>
+                            <option value="Montserrat">Montserrat</option>
+                            <option value="Poppins">Poppins</option>
+                            <option value="Oswald">Oswald</option>
+                            <option value="Bebas Neue">Bebas Neue</option>
+                            <option value="Righteous">Righteous</option>
+                            <option value="'Share Tech Mono', monospace">Share Tech Mono</option>
+                            <option value="Impact">Impact</option>
+                            <option value="Arial">Arial</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between w-full mt-1 border border-[#2a3142] rounded px-1 py-1">
+                    <span class="text-[9px] font-bold text-gray-500 tracking-wider">FORMAT HURUF</span>
+                    <div class="flex items-center gap-1" id="lyricsTransformGroup">
+                        <button class="btn-custom w-6 h-5 p-0 text-[10px]" data-val="uppercase">AA</button>
+                        <button class="btn-custom w-6 h-5 p-0 text-[10px] btn-active" data-val="capitalize">Aa</button>
+                    </div>
+                </div>
+                
+                <div class="control-row mt-1">
+                    <span class="control-label text-[9px] w-8 font-bold uppercase">UKR</span>
+                    <div class="flex-1"><input type="range" id="lyricsSizeSlider" min="10" max="100" value="36"></div>
+                </div>
+                
+                <div class="control-row mt-1">
+                    <span class="control-label text-[9px] w-8 font-bold text-yellow-400 uppercase">ANIM</span>
+                    <div class="flex-1">
+                        <select class="custom-select" id="lyricsAnimSelect">
+                            <option value="scroll">Modern Scroll (Bawaan)</option>
+                            <option value="fade">Pudar (Fade Center)</option>
+                            <option value="typewriter">Ketik (Typewriter)</option>
+                            <option value="karaoke">Karaoke (Mengalir)</option>
+                            <option value="zoom">Zoom (Skala Dinamis)</option>
+                            <option value="slide">Slide (Geser Samping)</option>
+                            <option value="bounce">Kinetik (Reaktif Bass)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="control-row mt-1">
+                    <span class="control-label text-[9px] w-8 font-bold text-yellow-400 uppercase">DELAY</span>
+                    <div class="flex-1 flex items-center">
+                        <input type="range" id="lyricsDelaySlider" data-no-indicator="true" min="-50" max="50" value="0">
+                        <span class="text-[9px] font-bold text-gray-400 ml-1 w-8 text-right shrink-0" id="lyricsDelayDisplay">0.0s</span>
+                    </div>
+                </div>
+                
+                <div class="control-row mt-1">
+                    <span class="control-label text-[9px] w-8 font-bold text-yellow-400 uppercase">PUDAR</span>
+                    <div class="flex-1 flex items-center">
+                        <input type="range" id="lyricsInterludeSlider" data-no-indicator="true" min="0" max="20" value="0">
+                        <span class="text-[9px] font-bold text-gray-400 ml-1 w-8 text-right shrink-0" id="lyricsInterludeDisplay">Mati</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-1 mt-1 w-full">
+                    <span class="text-[9px] font-bold text-gray-500 w-10 uppercase tracking-wider">DASAR</span>
+                    <div class="flex-1"><input type="color" id="lyricsBaseColorPicker" value="#ffffff" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent"></div>
+                    <span class="text-[9px] font-bold text-gray-500 w-10 uppercase tracking-wider ml-1">AKTIF</span>
+                    <div class="flex-1"><input type="color" id="lyricsActiveColorPicker" value="#facc15" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent"></div>
+                </div>
+                
+                <div class="flex items-start gap-1 mt-1">
+                    <span class="text-[9px] font-bold text-gray-500 w-10 tracking-wider uppercase mt-1">EFEK</span>
+                    <div class="flex flex-wrap gap-1 flex-1" id="lyricsEffectGroup">
+                        <button class="btn-custom" data-val="none">Normal</button>
+                        <button class="btn-custom btn-active" data-val="shadow">Shadow</button>
+                        <button class="btn-custom" data-val="glow">Glow</button>
+                        <button class="btn-custom" data-val="outline">Outline</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Panel Waktu/Time -->
             <div class="panel">
                 <div class="panel-header flex justify-between">
@@ -725,9 +889,8 @@
                             <span id="time-display">00:00 / 00:00</span>
                         </div>
                         <div class="w-full bg-gray-700 h-1.5 rounded-full relative cursor-pointer group" id="progress-container">
-                            <div class="h-full bg-red-600 rounded-full w-0 relative" id="progress-bar">
-                                <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_5px_rgba(255,255,255,0.8)] opacity-0 group-hover:opacity-100 transition-opacity translate-x-1/2" id="progress-handle"></div>
-                            </div>
+                            <div class="absolute top-0 left-0 h-full bg-red-600 rounded-full w-0 pointer-events-none" id="progress-bar"></div>
+                            <div class="absolute top-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_5px_rgba(255,255,255,0.8)] opacity-0 group-hover:opacity-100 transition-opacity transform -translate-x-1/2 -translate-y-1/2 pointer-events-none" id="progress-handle" style="left: 0%;"></div>
                         </div>
                         <span id="track-name-display" class="hidden"></span>
                     </div>
@@ -796,16 +959,18 @@
             textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50 },
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
             playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
+            lyrics: { enabled: true, font: 'Inter', transform: 'capitalize', size: 36, posY: 150, delay: 0, colorBase: '#ffffff', colorActive: '#facc15', effect: 'shadow', animMode: 'scroll' },
             render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 3000000, method: 'pisah' }
         };
 
-        let bboxes = { viz: null, overlay: null, text: null, time: null, playlist: null };
+        let bboxes = { viz: null, overlay: null, text: null, time: null, playlist: null, lyrics: null };
         let canvas = document.getElementById('previewCanvas');
         let ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
         const audioElement = new Audio();
         
         document.querySelectorAll('input[type=range]').forEach(slider => {
+            if (slider.hasAttribute('data-no-indicator')) return;
             const span = document.createElement('span');
             span.className = 'val-indicator text-[9px] text-gray-400 font-medium ml-1 w-6 text-right shrink-0 pointer-events-none';
             span.textContent = slider.value;
@@ -889,6 +1054,8 @@
         bindButtonGroup('textAlignGroup', 'textFx', 'align'); bindButtonGroup('textColorModeGroup', 'textFx', 'colorMode');
         bindButtonGroup('timeFormatGroup', 'timeFx', 'format'); bindButtonGroup('playlistAlignGroup', 'playlistFx', 'align');
         bindButtonGroup('playlistEffectGroup', 'playlistFx', 'effect'); bindButtonGroup('playlistBlinkModeGroup', 'playlistFx', 'blinkMode');
+        
+        bindButtonGroup('lyricsTransformGroup', 'lyrics', 'transform'); bindButtonGroup('lyricsEffectGroup', 'lyrics', 'effect');
 
         document.getElementById('textColorModeGroup').querySelectorAll('button').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -939,6 +1106,22 @@
         document.getElementById('playlistMaskPrecisionSlider').addEventListener('input', (e) => { state.playlistFx.maskPrecision = e.target.value / 100; });
         document.getElementById('playlistMaskColorPicker').addEventListener('input', (e) => { state.playlistFx.maskColor = e.target.value; });
         
+        document.getElementById('lyricsEnable').addEventListener('change', (e) => { state.lyrics.enabled = e.target.checked; });
+        document.getElementById('lyricsFontSelect').addEventListener('change', (e) => { state.lyrics.font = e.target.value; });
+        document.getElementById('lyricsSizeSlider').addEventListener('input', (e) => { state.lyrics.size = parseInt(e.target.value); });
+        document.getElementById('lyricsAnimSelect').addEventListener('change', (e) => { state.lyrics.animMode = e.target.value; });
+        document.getElementById('lyricsDelaySlider').addEventListener('input', (e) => { 
+            state.lyrics.delay = parseInt(e.target.value) / 10; 
+            let sign = state.lyrics.delay > 0 ? "+" : "";
+            document.getElementById('lyricsDelayDisplay').textContent = sign + state.lyrics.delay.toFixed(1) + "s";
+        });
+        document.getElementById('lyricsInterludeSlider').addEventListener('input', (e) => { 
+            state.lyrics.interludeFade = parseInt(e.target.value); 
+            document.getElementById('lyricsInterludeDisplay').textContent = state.lyrics.interludeFade === 0 ? "Mati" : state.lyrics.interludeFade + "s";
+        });
+        document.getElementById('lyricsBaseColorPicker').addEventListener('input', (e) => { state.lyrics.colorBase = e.target.value; });
+        document.getElementById('lyricsActiveColorPicker').addEventListener('input', (e) => { state.lyrics.colorActive = e.target.value; });
+
         document.getElementById('textIntensitySlider').addEventListener('input', (e) => { state.textFx.intensity = parseInt(e.target.value); });
         document.getElementById('textAnimSpeedSlider').addEventListener('input', (e) => { state.textFx.animSpeed = parseInt(e.target.value); });
         document.getElementById('snowIntensitySlider').addEventListener('input', (e) => { state.bg.snowIntensity = parseInt(e.target.value); });
@@ -987,6 +1170,358 @@
         let snowflakes = []; let raindrops = []; let goldDrops = []; let lightnings = []; let smokes = []; let PI2 = Math.PI * 2;
         let playlist = []; let currentTrackIndex = -1; let typewriterProgress = 0; let lastTrackForText = ""; let textTransitionStart = 0;
 
+        function hexToRgb(hex) {
+            let r = 0, g = 0, b = 0;
+            if (hex.length === 4) { r = parseInt(hex[1]+hex[1], 16); g = parseInt(hex[2]+hex[2], 16); b = parseInt(hex[3]+hex[3], 16); } 
+            else if (hex.length === 7) { r = parseInt(hex.substring(1,3), 16); g = parseInt(hex.substring(3,5), 16); b = parseInt(hex.substring(5,7), 16); }
+            return {r, g, b};
+        }
+        function lerpColor(hexA, hexB, t) {
+            const a = hexToRgb(hexA); const b = hexToRgb(hexB);
+            return `rgb(${Math.round(a.r + (b.r - a.r) * t)}, ${Math.round(a.g + (b.g - a.g) * t)}, ${Math.round(a.b + (b.b - a.b) * t)})`;
+        }
+
+        function parseLRC(lrcText) {
+            if (!lrcText) return [];
+            const lines = lrcText.split('\n');
+            const lyrics = [];
+            const timeReg = /\[(\d{2,}):(\d{2})\.(\d{1,3})\]/g;
+            let untimedCounter = 999990;
+            
+            for (let line of lines) {
+                let match;
+                let hasTime = false;
+                const times = [];
+                
+                timeReg.lastIndex = 0;
+                while ((match = timeReg.exec(line)) !== null) {
+                    hasTime = true;
+                    const min = parseInt(match[1]);
+                    const sec = parseInt(match[2]);
+                    let msStr = match[3];
+                    if (msStr.length === 1) msStr += '00';
+                    else if (msStr.length === 2) msStr += '0';
+                    const ms = parseInt(msStr);
+                    times.push(min * 60 + sec + ms / 1000);
+                }
+                
+                const text = line.replace(/\[\d{2,}:\d{2}\.\d{1,3}\]/g, '').trim();
+                
+                if (hasTime) {
+                    for (let t of times) {
+                        lyrics.push({ time: t, text: text });
+                    }
+                } else if (text.length > 0 && !line.startsWith("[ti:") && !line.startsWith("[ar:") && !line.startsWith("[al:") && !line.startsWith("[by:")) {
+                    lyrics.push({ time: untimedCounter++, text: text });
+                }
+            }
+            lyrics.sort((a, b) => a.time - b.time);
+            return lyrics;
+        }
+
+        function updateLyricsStatus(skipLiveSyncInit = false) {
+            const statusTxt = document.getElementById('lyricsStatusText');
+            if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].lyrics && playlist[currentTrackIndex].lyrics.length > 0) {
+                statusTxt.textContent = `${playlist[currentTrackIndex].lyrics.length} baris lirik dimuat.`;
+                statusTxt.className = "text-[9px] text-green-500 font-bold";
+            } else {
+                statusTxt.textContent = "Belum ada lirik.";
+                statusTxt.className = "text-[9px] text-gray-500 font-bold";
+            }
+            // Cegah reset (loop) ke baris pertama jika dipanggil dari tombol Spasi Live Sync
+            if (!skipLiveSyncInit && typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive && typeof initLiveSync === 'function') initLiveSync();
+        }
+
+        document.getElementById('btnSearchLyrics').addEventListener('click', async () => {
+            const query = document.getElementById('lyricsSearchInput').value;
+            if (!query) { showNotification("Masukkan judul lagu / penyanyi!"); return; }
+            
+            const statusTxt = document.getElementById('lyricsStatusText');
+            statusTxt.textContent = "Mencari..."; statusTxt.className = "text-[9px] text-yellow-500 font-bold";
+            try {
+                const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                
+                // Cari data yang memiliki lirik mentah (plainLyrics) atau lirik waktu (syncedLyrics)
+                const match = data.find(item => item.plainLyrics || item.syncedLyrics);
+                
+                if (match) {
+                    let raw = match.plainLyrics;
+                    
+                    // Jika plainLyrics tidak ada, ambil syncedLyrics tapi HAPUS semua format waktunya
+                    if (!raw && match.syncedLyrics) {
+                        raw = match.syncedLyrics.replace(/\[\d{2,}:\d{2}\.\d{1,3}\]/g, '').trim();
+                        // Bersihkan spasi kosong antar baris yang berlebih
+                        raw = raw.replace(/\n\s*\n/g, '\n');
+                    }
+
+                    if (currentTrackIndex >= 0 && currentTrackIndex < playlist.length) {
+                        playlist[currentTrackIndex].rawLRC = raw;
+                        playlist[currentTrackIndex].lyrics = parseLRC(raw);
+                        
+                        // Segarkan panel Live Sync otomatis jika sedang aktif
+                        if (typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive && typeof initLiveSync === 'function') {
+                            initLiveSync();
+                        }
+                        
+                        updateLyricsStatus();
+                        showNotification("Teks lirik bersih berhasil diunduh!");
+                    } else {
+                        showNotification("Pilih lagu di playlist terlebih dahulu!");
+                        statusTxt.textContent = "Belum ada lagu dipilih."; statusTxt.className = "text-[9px] text-red-500 font-bold";
+                    }
+                } else {
+                     statusTxt.textContent = "Lirik tidak ditemukan."; statusTxt.className = "text-[9px] text-red-500 font-bold";
+                     showNotification("Teks lirik tidak ditemukan untuk lagu ini.");
+                }
+            } catch (e) {
+                statusTxt.textContent = "Gagal mencari lirik (Error)."; statusTxt.className = "text-[9px] text-red-500 font-bold";
+            }
+        });
+
+        const lrcModal = document.getElementById('lrc-modal');
+        const lrcTextarea = document.getElementById('lrc-textarea');
+        const lrcBackdrop = document.getElementById('lrc-highlight-backdrop');
+
+        function updateLrcHighlight() {
+            let text = lrcTextarea.value;
+            // Hindari HTML injeksi di backdrop
+            text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            // Highlight format waktu menjadi kuning menyala
+            text = text.replace(/(\[\d{2,}:\d{2}\.\d{1,3}\])/g, '<span class="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,1)] font-bold">$1</span>');
+            // Pastikan scroll sama hingga baris terbawah
+            if (text.endsWith('\n')) text += ' ';
+            lrcBackdrop.innerHTML = text;
+        }
+
+        lrcTextarea.addEventListener('input', updateLrcHighlight);
+        lrcTextarea.addEventListener('scroll', () => { lrcBackdrop.scrollTop = lrcTextarea.scrollTop; });
+
+        document.getElementById('btnEditLrc').addEventListener('click', () => {
+            if (currentTrackIndex < 0 || currentTrackIndex >= playlist.length) {
+                showNotification("Pilih lagu di playlist terlebih dahulu!"); return;
+            }
+            lrcTextarea.value = playlist[currentTrackIndex].rawLRC || "";
+            updateLrcHighlight();
+            lrcModal.classList.remove('opacity-0', 'pointer-events-none');
+        });
+
+        document.getElementById('close-lrc-modal').addEventListener('click', () => {
+            lrcModal.classList.add('opacity-0', 'pointer-events-none');
+        });
+
+        // Fitur Edit Efisien: Mengambil info baris kursor
+        function getCursorLineInfo() {
+            const val = lrcTextarea.value;
+            const start = lrcTextarea.selectionStart;
+            let lineStart = val.lastIndexOf('\n', start - 1) + 1;
+            let lineEnd = val.indexOf('\n', start);
+            if (lineEnd === -1) lineEnd = val.length;
+            return { lineStart, lineEnd, text: val.substring(lineStart, lineEnd) };
+        }
+
+        // Fitur Edit Efisien: Stempel Waktu (Stamp)
+        function stampCurrentTimeLrc() {
+            if (isOfflineRendering || !audioElement || isNaN(audioElement.currentTime)) return;
+            const curTime = audioElement.currentTime;
+            let m = Math.floor(curTime / 60).toString().padStart(2, '0');
+            let s = Math.floor(curTime % 60).toString().padStart(2, '0');
+            let ms = Math.floor((curTime % 1) * 100).toString().padStart(2, '0');
+            const timeTag = `[${m}:${s}.${ms}]`;
+
+            const info = getCursorLineInfo();
+            const val = lrcTextarea.value;
+            let lineText = info.text;
+
+            if (/^\[\d{2,}:\d{2}\.\d{1,3}\]/.test(lineText)) {
+                lineText = lineText.replace(/^\[\d{2,}:\d{2}\.\d{1,3}\]/, timeTag);
+            } else {
+                lineText = timeTag + lineText;
+            }
+
+            const newVal = val.substring(0, info.lineStart) + lineText + val.substring(info.lineEnd);
+            lrcTextarea.value = newVal;
+            updateLrcHighlight();
+
+            let nextLineStart = info.lineStart + lineText.length + 1;
+            if (nextLineStart <= newVal.length) {
+                lrcTextarea.setSelectionRange(nextLineStart, nextLineStart);
+            }
+            lrcTextarea.focus();
+        }
+
+        document.getElementById('btn-stamp-time').addEventListener('click', stampCurrentTimeLrc);
+        
+        let isTapMode = false;
+        document.getElementById('btn-tap-mode').addEventListener('click', (e) => {
+            isTapMode = !isTapMode;
+            const btn = e.currentTarget;
+            btn.innerHTML = isTapMode ? '<i class="fa-solid fa-hand-pointer text-yellow-400"></i> Mode Spasi: ON' : '<i class="fa-solid fa-hand-pointer"></i> Mode Spasi: OFF';
+            if(isTapMode) { btn.classList.replace('bg-gray-700', 'bg-green-700'); btn.classList.replace('hover:bg-gray-600', 'hover:bg-green-600'); }
+            else { btn.classList.replace('bg-green-700', 'bg-gray-700'); btn.classList.replace('hover:bg-green-600', 'hover:bg-gray-600'); }
+            lrcTextarea.focus();
+        });
+
+        lrcTextarea.addEventListener('keydown', (e) => {
+            if (e.key === 'F9') { e.preventDefault(); stampCurrentTimeLrc(); }
+            if (e.key === ' ' && isTapMode) { e.preventDefault(); stampCurrentTimeLrc(); }
+        });
+
+        // Fitur Edit Efisien: Geser Waktu (Shift Time)
+        function shiftSelectedTimeLrc(offset) {
+             const start = lrcTextarea.selectionStart; const end = lrcTextarea.selectionEnd; const val = lrcTextarea.value;
+             let selStart = start; let selEnd = end;
+             
+             // Jika tidak ada teks di-blok, aplikasikan ke baris saat ini
+             if (start === end) { const info = getCursorLineInfo(); selStart = info.lineStart; selEnd = info.lineEnd; }
+             let selectionText = val.substring(selStart, selEnd);
+             
+             let newText = selectionText.replace(/\[(\d{2,}):(\d{2})\.(\d{1,3})\]/g, (match, m, s, ms) => {
+                let msPadding = ms.length === 2 ? ms + '0' : ms;
+                let time = parseInt(m) * 60 + parseInt(s) + (parseInt(msPadding) / 1000);
+                time += offset; if(time < 0) time = 0;
+                let newM = Math.floor(time / 60).toString().padStart(2, '0');
+                let newS = Math.floor(time % 60).toString().padStart(2, '0');
+                let newMs = Math.floor((time % 1) * 100).toString().padStart(2, '0');
+                return `[${newM}:${newS}.${newMs}]`;
+             });
+             
+             lrcTextarea.value = val.substring(0, selStart) + newText + val.substring(selEnd);
+             updateLrcHighlight();
+             lrcTextarea.setSelectionRange(selStart, selStart + newText.length);
+             lrcTextarea.focus();
+        }
+
+        document.getElementById('btn-shift-minus').addEventListener('click', () => shiftSelectedTimeLrc(-0.5));
+        document.getElementById('btn-shift-plus').addEventListener('click', () => shiftSelectedTimeLrc(0.5));
+
+        // LOGIKA LIVE SYNC (PANEL)
+        let isLiveSyncActive = false;
+        let liveSyncIndex = 0;
+        let liveSyncData = []; 
+
+        document.getElementById('liveSyncToggle').addEventListener('change', (e) => {
+            isLiveSyncActive = e.target.checked;
+            const panel = document.getElementById('liveSyncPanel');
+            const btnReset = document.getElementById('btnResetSync');
+            
+            if (isLiveSyncActive) {
+                panel.classList.remove('hidden'); panel.classList.add('flex');
+                btnReset.classList.remove('hidden');
+                initLiveSync();
+            } else {
+                panel.classList.add('hidden'); panel.classList.remove('flex');
+                btnReset.classList.add('hidden');
+            }
+        });
+
+        function initLiveSync() {
+            if (currentTrackIndex < 0 || !playlist[currentTrackIndex]) {
+                document.getElementById('syncNextLine').textContent = "Pilih lagu terlebih dahulu!"; return;
+            }
+            let raw = playlist[currentTrackIndex].rawLRC || "";
+            let lines = raw.split('\n');
+            liveSyncData = [];
+            for (let i = 0; i < lines.length; i++) {
+                let text = lines[i].replace(/\[\d{2,}:\d{2}\.\d{1,3}\]/g, '').trim();
+                if (text.length > 0 && !lines[i].startsWith("[ti:") && !lines[i].startsWith("[ar:") && !lines[i].startsWith("[al:") && !lines[i].startsWith("[by:")) {
+                    liveSyncData.push({ lineIdx: i, text: text });
+                }
+            }
+            liveSyncIndex = 0; updateLiveSyncUI();
+        }
+
+        function updateLiveSyncUI() {
+            if (liveSyncData.length === 0) {
+                document.getElementById('syncNextLine').textContent = "Tempel teks lirik di Editor Manual dulu.";
+                document.getElementById('syncProgressText').textContent = "0/0"; return;
+            }
+            if (liveSyncIndex >= liveSyncData.length) {
+                document.getElementById('syncNextLine').textContent = "✅ SELESAI!";
+                document.getElementById('syncProgressText').textContent = `${liveSyncData.length}/${liveSyncData.length}`; return;
+            }
+            document.getElementById('syncNextLine').textContent = liveSyncData[liveSyncIndex].text;
+            document.getElementById('syncProgressText').textContent = `${liveSyncIndex + 1}/${liveSyncData.length}`;
+        }
+
+        function doLiveSyncStamp() {
+            if (!isLiveSyncActive || liveSyncData.length === 0 || liveSyncIndex >= liveSyncData.length) return;
+            if (currentTrackIndex < 0 || !playlist[currentTrackIndex]) return;
+            
+            let curTime = audioElement.currentTime;
+            // Presisi ekstra: Kurangi 150ms untuk kompensasi delay reaksi pendengaran & ketukan jari manusia
+            let stampTime = Math.max(0, curTime - 0.15);
+            
+            let m = Math.floor(stampTime / 60).toString().padStart(2, '0');
+            let s = Math.floor(stampTime % 60).toString().padStart(2, '0');
+            let ms = Math.floor((stampTime % 1) * 100).toString().padStart(2, '0');
+            const timeTag = `[${m}:${s}.${ms}]`;
+            
+            let rawLines = (playlist[currentTrackIndex].rawLRC || "").split('\n');
+            let targetLineIdx = liveSyncData[liveSyncIndex].lineIdx;
+            let oldLine = rawLines[targetLineIdx];
+            
+            if (/^\[\d{2,}:\d{2}\.\d{1,3}\]/.test(oldLine)) { rawLines[targetLineIdx] = oldLine.replace(/^\[\d{2,}:\d{2}\.\d{1,3}\]/, timeTag); } 
+            else { rawLines[targetLineIdx] = timeTag + oldLine; }
+            
+            let newRaw = rawLines.join('\n');
+            playlist[currentTrackIndex].rawLRC = newRaw;
+            playlist[currentTrackIndex].lyrics = parseLRC(newRaw);
+            
+            liveSyncIndex++; updateLiveSyncUI(); updateLyricsStatus(true);
+            
+            const btn = document.getElementById('btnSyncStamp');
+            btn.classList.add('bg-white'); setTimeout(() => btn.classList.remove('bg-white'), 100);
+        }
+
+        document.getElementById('btnSyncStamp').addEventListener('click', doLiveSyncStamp);
+        document.getElementById('btnSyncNext').addEventListener('click', () => { if(liveSyncIndex < liveSyncData.length) liveSyncIndex++; updateLiveSyncUI(); });
+        document.getElementById('btnSyncPrev').addEventListener('click', () => { if(liveSyncIndex > 0) liveSyncIndex--; updateLiveSyncUI(); });
+        
+        document.getElementById('btnResetSync').addEventListener('click', () => {
+            if (currentTrackIndex < 0 || !playlist[currentTrackIndex]) return;
+            if(confirm("Hapus semua format waktu (timestamp) pada lirik ini dan mulai sinkronisasi dari awal?")) {
+                let rawLines = (playlist[currentTrackIndex].rawLRC || "").split('\n');
+                for (let i = 0; i < rawLines.length; i++) { rawLines[i] = rawLines[i].replace(/\[\d{2,}:\d{2}\.\d{1,3}\]/g, '').trim(); }
+                playlist[currentTrackIndex].rawLRC = rawLines.join('\n');
+                playlist[currentTrackIndex].lyrics = parseLRC(playlist[currentTrackIndex].rawLRC);
+                initLiveSync(); updateLyricsStatus(); showNotification("Waktu lirik berhasil di-reset.");
+            }
+        });
+
+        document.getElementById('save-lrc-btn').addEventListener('click', () => {
+            if (currentTrackIndex >= 0 && currentTrackIndex < playlist.length) {
+                playlist[currentTrackIndex].rawLRC = lrcTextarea.value;
+                playlist[currentTrackIndex].lyrics = parseLRC(lrcTextarea.value);
+                updateLyricsStatus();
+                showNotification("Lirik berhasil disimpan!");
+                lrcModal.classList.add('opacity-0', 'pointer-events-none');
+            }
+        });
+
+        document.getElementById('btn-sync-offset').addEventListener('click', () => {
+            const offsetStr = prompt("Masukkan offset penyesuaian waktu dalam detik\n(contoh: 2.5 untuk maju, atau -1.2 untuk mundur):", "0");
+            if (offsetStr === null) return;
+            const offset = parseFloat(offsetStr);
+            if (!isNaN(offset) && offset !== 0) {
+                let lines = lrcTextarea.value.split('\n');
+                let newLines = lines.map(line => {
+                    return line.replace(/\[(\d{2}):(\d{2})\.(\d{2,3})\]/g, (match, m, s, ms) => {
+                        let msPadding = ms.length === 2 ? ms + '0' : ms;
+                        let time = parseInt(m) * 60 + parseInt(s) + (parseInt(msPadding) / 1000);
+                        time += offset;
+                        if(time < 0) time = 0;
+                        let newM = Math.floor(time / 60).toString().padStart(2, '0');
+                        let newS = Math.floor(time % 60).toString().padStart(2, '0');
+                        let newMs = Math.floor((time % 1) * 100).toString().padStart(2, '0');
+                        return `[${newM}:${newS}.${newMs}]`;
+                    });
+                });
+                lrcTextarea.value = newLines.join('\n');
+                showNotification(`Semua waktu lirik disesuaikan ${offset > 0 ? '+' : ''}${offset}s`);
+            }
+        });
+
         function resizeCanvas() {
             canvas.width = state.render.res === 1080 ? 1920 : 1280;
             canvas.height = state.render.res === 1080 ? 1080 : 720;
@@ -1007,6 +1542,10 @@
             if (audioElement.src && audioElement.src.startsWith('blob:')) { URL.revokeObjectURL(audioElement.src); }
             audioElement.src = URL.createObjectURL(file);
             document.getElementById('player-title').textContent = file.name; document.getElementById('track-name-display').textContent = file.name;
+            
+            document.getElementById('lyricsSearchInput').value = file.name.replace(/\.[^/.]+$/, "");
+            updateLyricsStatus();
+
             document.getElementById('no-audio-text').style.display = 'none'; renderPlaylist();
 
             if (isImagePlaylistActive && imagePlaylist.length > 0 && !state.bg.autoSlideshow) {
@@ -1054,6 +1593,7 @@
             audioElement.src = ""; playlist = []; currentTrackIndex = -1;
             document.getElementById('player-title').textContent = "Belum ada audio"; document.getElementById('track-name-display').textContent = "Belum ada audio";
             document.getElementById('no-audio-text').style.display = 'block'; isPlaying = false; updatePlayBtn(); renderPlaylist();
+            updateLyricsStatus(); document.getElementById('lyricsSearchInput').value = "";
             if (isImagePlaylistActive) { state.bg.image = null; state.bg.imgElement = null; currentImageIndex = -1; renderImagePlaylistUI(); }
             if(ctx) { ctx.fillStyle = state.bg.color || '#0f1115'; ctx.fillRect(0,0,canvas.width,canvas.height); }
         }
@@ -1624,7 +2164,7 @@
             const w = 1280; const h = 720; const cx = w / 2; const cy = h / 2;
             
             ctx.fillStyle = state.bg.color || '#0f1115'; ctx.fillRect(0, 0, w, h);
-            bboxes.viz = null; bboxes.overlay = null; bboxes.text = null; bboxes.time = null; bboxes.playlist = null;
+            bboxes.viz = null; bboxes.overlay = null; bboxes.text = null; bboxes.time = null; bboxes.playlist = null; bboxes.lyrics = null;
             
             let audioReactivity = 0; let bgAudioReactivity = 0; let kickBassReactivity = 0; 
             if(dataArray) {
@@ -2139,6 +2679,228 @@
                 }
             }
 
+            if (state.lyrics.enabled && currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].lyrics) {
+                const lData = playlist[currentTrackIndex].lyrics;
+                if (lData.length > 0) {
+                    let curTime = (isOfflineRendering ? window.offlineCurrentTime : audioElement.currentTime) - state.lyrics.delay;
+                    
+                    let currentIndex = -1;
+                    for (let i = 0; i < lData.length; i++) {
+                        if (curTime >= lData[i].time) {
+                            currentIndex = i;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    ctx.save();
+                    let fontSize = state.lyrics.size * (h / 720);
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    let textY = cy + state.lyrics.posY * (h / 720);
+                    let textX = cx + (state.lyrics.offsetX || 0);
+
+                    const transformText = (txt) => {
+                        if(!txt) return "";
+                        if (state.lyrics.transform === 'uppercase') return txt.toUpperCase();
+                        if (state.lyrics.transform === 'lowercase') return txt.toLowerCase();
+                        if (state.lyrics.transform === 'capitalize') {
+                            return txt.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+                        }
+                        return txt;
+                    };
+
+                    let floatIndex = currentIndex;
+                    if (currentIndex >= 0) {
+                        let timeSinceLineStart = curTime - lData[currentIndex].time;
+                        let transitionDuration = 0.4; 
+                        if (timeSinceLineStart < transitionDuration && timeSinceLineStart >= 0) {
+                            let progress = timeSinceLineStart / transitionDuration;
+                            let easeProgress = 1 - Math.pow(1 - progress, 3); 
+                            floatIndex = currentIndex - (1 - easeProgress);
+                        }
+                    }
+
+                    let interludeAlpha = 1.0;
+                    if ((state.lyrics.interludeFade || 0) > 0 && currentIndex >= 0) {
+                        let timeSinceStart = curTime - lData[currentIndex].time;
+                        let fadeOutLimit = state.lyrics.interludeFade;
+                        
+                        let nextTime = (currentIndex < lData.length - 1) ? lData[currentIndex + 1].time : (audioElement.duration || 999);
+                        let timeToNext = nextTime - curTime;
+                        
+                        // Proses memudar (fade-out) jika vokal sudah diam melebihi batas waktu Pudar
+                        if (timeSinceStart > fadeOutLimit) {
+                            let fadeOutProgress = (timeSinceStart - fadeOutLimit) / 1.0; // 1 detik waktu pudar
+                            interludeAlpha = Math.max(0, 1.0 - fadeOutProgress);
+                        }
+                        
+                        // Proses muncul kembali (fade-in) jika vokal baris selanjutnya segera dimulai (< 1.5s)
+                        if (timeToNext < 1.5) {
+                            let fadeInProgress = 1.0 - (timeToNext / 1.5);
+                            interludeAlpha = Math.max(interludeAlpha, fadeInProgress);
+                        }
+                        
+                        interludeAlpha = Math.max(0, Math.min(1, interludeAlpha));
+                    }
+                    
+                    const lineSpacing = fontSize * 1.8;
+
+                    // Hitung durasi baris saat ini (untuk efek Typewriter / Karaoke)
+                    let lineDuration = 3.0; 
+                    if (currentIndex >= 0) {
+                        if (currentIndex < lData.length - 1) {
+                            lineDuration = lData[currentIndex + 1].time - lData[currentIndex].time;
+                        } else {
+                            let dur = audioElement.duration || (isOfflineRendering ? 100 : 0);
+                            lineDuration = Math.max(3.0, dur - lData[currentIndex].time);
+                        }
+                    }
+
+                    // Fungsi render lirik yang terpusat dan dinamis
+                    const drawLyricLine = (txt, yOffset, alpha, scaleFactor, blendedColor, isMainTarget, charsToShow, useKaraoke) => {
+                        if(!txt || alpha <= 0.01) return;
+                        let formattedTxt = transformText(txt);
+                        
+                        if (charsToShow !== undefined && charsToShow >= 0) {
+                             formattedTxt = formattedTxt.substring(0, charsToShow);
+                        }
+                        
+                        let curFontSize = fontSize * scaleFactor;
+                        ctx.font = `bold ${curFontSize}px ${state.lyrics.font}, sans-serif`;
+                        
+                        let textW = ctx.measureText(formattedTxt).width;
+                        let actualColor = blendedColor;
+
+                        // Konfigurasi Gradien Karaoke
+                        if (useKaraoke && isMainTarget && charsToShow === undefined) {
+                             let timeSinceLineStart = curTime - lData[currentIndex].time;
+                             let fillDuration = Math.min(lineDuration * 0.8, 4.0); // Maksimal 4 detik untuk mewarnai penuh agar tidak terlalu lambat
+                             if (fillDuration <= 0.1) fillDuration = 1.0;
+                             let fillRatio = Math.max(0, Math.min(1, timeSinceLineStart / fillDuration));
+                             
+                             if (textW > 0) {
+                                 let grad = ctx.createLinearGradient(textX - textW/2, 0, textX + textW/2, 0);
+                                 grad.addColorStop(0, state.lyrics.colorActive);
+                                 grad.addColorStop(fillRatio, state.lyrics.colorActive);
+                                 grad.addColorStop(Math.min(1, fillRatio + 0.05), state.lyrics.colorBase);
+                                 grad.addColorStop(1, state.lyrics.colorBase);
+                                 actualColor = grad;
+                             }
+                        }
+
+                        ctx.globalAlpha = alpha;
+                        ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+                        
+                        if (state.lyrics.effect === 'shadow') {
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)'; ctx.shadowBlur = 10 * (h/720) * scaleFactor; ctx.shadowOffsetX = 3 * (h/720) * scaleFactor; ctx.shadowOffsetY = 3 * (h/720) * scaleFactor;
+                        } else if (state.lyrics.effect === 'glow') {
+                            ctx.shadowColor = (useKaraoke && isMainTarget) ? state.lyrics.colorActive : blendedColor; 
+                            ctx.shadowBlur = 15 * (h/720) * scaleFactor;
+                        }
+
+                        if (state.lyrics.effect === 'outline') {
+                            ctx.lineWidth = Math.max(1, curFontSize * 0.05); ctx.strokeStyle = 'black'; ctx.lineJoin = 'round';
+                            ctx.strokeText(formattedTxt, textX, textY + yOffset);
+                        }
+                        
+                        ctx.fillStyle = actualColor;
+                        ctx.fillText(formattedTxt, textX, textY + yOffset);
+                        
+                        if (isMainTarget) {
+                            bboxes.lyrics = { x: textX - textW/2, y: textY + yOffset - curFontSize/2, w: textW, h: curFontSize };
+                        }
+                    };
+
+                    let animMode = state.lyrics.animMode || 'scroll';
+
+                    if (animMode === 'scroll' || animMode === 'karaoke') {
+                        // Varian 1 & 4: Animasi Scroll Halus Bawaan & Karaoke Mengalir
+                        for (let i = currentIndex - 3; i <= currentIndex + 3; i++) {
+                            if (i < 0 || i >= lData.length) continue;
+                            
+                            let distance = Math.abs(i - floatIndex);
+                            if (distance > 2.5) continue;
+                            
+                            let yOffset = (i - floatIndex) * lineSpacing;
+                            let scaleFactor = Math.max(0.6, 1.0 - (distance * 0.3)); 
+                            
+                            let alpha = 0;
+                            if (distance <= 1) {
+                                alpha = 1.0 - (distance * 0.6); 
+                            } else if (distance <= 2.5) {
+                                alpha = 0.4 * (1 - ((distance - 1) / 1.5)); 
+                            }
+                            
+                            if (alpha <= 0.01) continue;
+                            
+                            let exactDistance = Math.abs(i - currentIndex);
+                            let colorRatio = Math.max(0, 1.0 - (exactDistance * 1.5));
+                            let blendedColor = lerpColor(state.lyrics.colorBase, state.lyrics.colorActive, colorRatio);
+                            
+                            let isMainTarget = (i === currentIndex);
+                            drawLyricLine(lData[i].text, yOffset, alpha * interludeAlpha, scaleFactor, blendedColor, isMainTarget, undefined, animMode === 'karaoke');
+                        }
+                    } 
+                    else if (['fade', 'typewriter', 'zoom', 'slide', 'bounce'].includes(animMode)) {
+                        // Varian Fokus Tengah (Pudar, Ketik, Zoom, Slide, Kinetik)
+                        if (currentIndex >= 0) {
+                            let timeSinceLineStart = curTime - lData[currentIndex].time;
+                            let alpha = 1.0;
+                            let yOffset = 0;
+                            let xOffsetAnim = 0;
+                            let scaleFactor = 1.2; 
+                            
+                            // Logika Pudar & Geser Halus (Masuk / Keluar)
+                            if (timeSinceLineStart < 0.4) {
+                                let prog = timeSinceLineStart / 0.4;
+                                alpha = prog;
+                                if (animMode === 'fade') yOffset = (1 - prog) * 15; 
+                                else if (animMode === 'zoom') scaleFactor = 0.5 + (prog * 0.7);
+                                else if (animMode === 'slide') xOffsetAnim = -(1 - Math.pow(prog, 3)) * 50;
+                            } else if (timeSinceLineStart > lineDuration - 0.4 && currentIndex < lData.length - 1) {
+                                let fadeOutTime = timeSinceLineStart - (lineDuration - 0.4);
+                                let prog = fadeOutTime / 0.4;
+                                alpha = 1.0 - prog;
+                                if (animMode === 'fade') yOffset = -prog * 15; 
+                                else if (animMode === 'zoom') scaleFactor = 1.2 + (prog * 0.3);
+                                else if (animMode === 'slide') xOffsetAnim = Math.pow(prog, 3) * 50;
+                            }
+                            alpha = Math.max(0, Math.min(1, alpha));
+
+                            // Logika Efek Mengetik
+                            let charsToShow = undefined;
+                            if (animMode === 'typewriter') {
+                                let fullText = transformText(lData[currentIndex].text);
+                                let typeSpeed = 25; // 25 karakter per detik
+                                charsToShow = Math.floor(timeSinceLineStart * typeSpeed);
+                                if (charsToShow > fullText.length) charsToShow = fullText.length;
+                            }
+
+                            // Logika Efek Kinetik (Reaktif Bass)
+                            if (animMode === 'bounce') {
+                                scaleFactor = 1.2 + (kickBassReactivity * 0.2);
+                                if (kickBassReactivity > 0.4) {
+                                    xOffsetAnim = (Math.random() - 0.5) * kickBassReactivity * 8;
+                                    yOffset += (Math.random() - 0.5) * kickBassReactivity * 8;
+                                }
+                            }
+
+                            let originalTextX = textX;
+                            textX += xOffsetAnim;
+
+                            // Render khusus 1 baris
+                            drawLyricLine(lData[currentIndex].text, yOffset, alpha * interludeAlpha, scaleFactor, state.lyrics.colorActive, true, charsToShow, false);
+                            
+                            textX = originalTextX;
+                        }
+                    }
+                    
+                    ctx.restore();
+                }
+            }
+
             if (state.overlay.lapisan === 'depan' || state.overlay.lapisan === 'kunci') drawOverlayObj();
             
             ctx.restore();
@@ -2157,6 +2919,22 @@
             const setVal = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.value = val; };
             const setCheck = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.checked = val; };
             const setBtn = (groupId, val) => { const grp = document.getElementById(groupId); if(grp && val !== undefined) { grp.querySelectorAll('button').forEach(b => { if(b.dataset.val === String(val)) b.classList.add('btn-active'); else b.classList.remove('btn-active'); }); } };
+
+            setCheck('lyricsEnable', state.lyrics.enabled);
+            setVal('lyricsFontSelect', state.lyrics.font);
+            setBtn('lyricsTransformGroup', state.lyrics.transform);
+            setVal('lyricsSizeSlider', state.lyrics.size);
+            setVal('lyricsAnimSelect', state.lyrics.animMode);
+            setVal('lyricsDelaySlider', state.lyrics.delay * 10);
+            let sign = state.lyrics.delay > 0 ? "+" : "";
+            if (document.getElementById('lyricsDelayDisplay')) document.getElementById('lyricsDelayDisplay').textContent = sign + state.lyrics.delay.toFixed(1) + "s";
+            
+            setVal('lyricsInterludeSlider', state.lyrics.interludeFade || 0);
+            if (document.getElementById('lyricsInterludeDisplay')) document.getElementById('lyricsInterludeDisplay').textContent = (state.lyrics.interludeFade || 0) === 0 ? "Mati" : (state.lyrics.interludeFade || 0) + "s";
+            
+            setVal('lyricsBaseColorPicker', state.lyrics.colorBase);
+            setVal('lyricsActiveColorPicker', state.lyrics.colorActive);
+            setBtn('lyricsEffectGroup', state.lyrics.effect);
 
             setCheck('vizEnable', state.viz.enabled); setBtn('vizAlignGroup', state.viz.align); setVal('vizSizeSlider', state.viz.size * 100); setVal('vizWidthSlider', state.viz.width * 100); setVal('vizOpacitySlider', state.viz.opacity * 100); setBtn('vizColorModeGroup', state.viz.colorMode); setVal('vizArgbSpeedSlider', state.viz.argbSpeed); setVal('vizColorPicker', state.viz.staticColor); setVal('vizTypeSelect', state.viz.type);
             const wg = document.getElementById('bgWeatherGroup'); if(wg && state.bg.weather) { wg.querySelectorAll('button').forEach(b => { if(state.bg.weather.includes(b.dataset.val)) b.classList.add('btn-active'); else b.classList.remove('btn-active'); }); }
@@ -2180,7 +2958,7 @@
             setVal('renderMethodSelect', state.render.method); setBtn('renderBitrateModeGroup', state.render.bitrateMode); setVal('renderBitrateSelect', state.render.targetBitrate);
             setVal('renderResSelect', state.render.res); setVal('renderFpsSelect', state.render.fps);
 
-            document.querySelectorAll('input[type=range]').forEach(slider => { const span = slider.parentElement.querySelector('.val-indicator'); if (span) span.textContent = slider.value; });
+            document.querySelectorAll('input[type=range]:not([data-no-indicator])').forEach(slider => { const span = slider.parentElement.querySelector('.val-indicator'); if (span) span.textContent = slider.value; });
             if (state.textFx.colorMode === 'auto') { document.getElementById('textStaticColorGroup').style.display = 'none'; document.getElementById('textArgbSpeedGroup').style.display = 'flex'; } else { document.getElementById('textStaticColorGroup').style.display = 'flex'; document.getElementById('textArgbSpeedGroup').style.display = 'none'; }
             if (state.viz.colorMode === 'auto') { document.getElementById('vizColorLabel').textContent = 'Speed'; document.getElementById('vizArgbSpeedSlider').classList.remove('hidden'); document.getElementById('vizColorPicker').classList.add('hidden'); } else { document.getElementById('vizColorLabel').textContent = 'Warna'; document.getElementById('vizArgbSpeedSlider').classList.add('hidden'); document.getElementById('vizColorPicker').classList.remove('hidden'); }
         }
@@ -2208,6 +2986,7 @@
             if (state.textFx.enabled && bboxes.text) { const padding = 10; if (pos.x >= bboxes.text.x - padding && pos.x <= bboxes.text.x + bboxes.text.w + padding && pos.y >= bboxes.text.y - padding && pos.y <= bboxes.text.y + bboxes.text.h + padding) { clicked = 'text'; } }
             if (!clicked && state.timeFx.enabled && bboxes.time) { const padding = 10; if (pos.x >= bboxes.time.x - padding && pos.x <= bboxes.time.x + bboxes.time.w + padding && pos.y >= bboxes.time.y - padding && pos.y <= bboxes.time.y + bboxes.time.h + padding) { clicked = 'time'; } }
             if (!clicked && state.playlistFx.enabled && bboxes.playlist) { const padding = 10; if (pos.x >= bboxes.playlist.x - padding && pos.x <= bboxes.playlist.x + bboxes.playlist.w + padding && pos.y >= bboxes.playlist.y - padding && pos.y <= bboxes.playlist.y + bboxes.playlist.h + padding) { clicked = 'playlist'; } }
+            if (!clicked && state.lyrics.enabled && bboxes.lyrics) { const padding = 10; if (pos.x >= bboxes.lyrics.x - padding && pos.x <= bboxes.lyrics.x + bboxes.lyrics.w + padding && pos.y >= bboxes.lyrics.y - padding && pos.y <= bboxes.lyrics.y + bboxes.lyrics.h + padding) { clicked = 'lyrics'; } }
             if (!clicked && state.overlay.element && (state.overlay.lapisan === 'depan' || state.overlay.lapisan === 'kunci')) { if (bboxes.overlay && pos.x >= bboxes.overlay.x && pos.x <= bboxes.overlay.x + bboxes.overlay.w && pos.y >= bboxes.overlay.y && pos.y <= bboxes.overlay.y + bboxes.overlay.h) { clicked = 'overlay'; } }
             if (!clicked && bboxes.viz) { if (pos.x >= bboxes.viz.x && pos.x <= bboxes.viz.x + bboxes.viz.w && pos.y >= bboxes.viz.y && pos.y <= bboxes.viz.y + bboxes.viz.h) { clicked = 'viz'; } }
             if (!clicked && state.overlay.element && state.overlay.lapisan === 'belakang') { if (bboxes.overlay && pos.x >= bboxes.overlay.x && pos.x <= bboxes.overlay.x + bboxes.overlay.w && pos.y >= bboxes.overlay.y && pos.y <= bboxes.overlay.y + bboxes.overlay.h) { clicked = 'overlay'; } }
@@ -2219,6 +2998,7 @@
                 else if (clicked === 'text') { initialOffsetX = state.textFx.offsetX || 0; initialOffsetY = state.textFx.offsetY || 0; }
                 else if (clicked === 'time') { initialOffsetX = state.timeFx.offsetX || 0; initialOffsetY = state.timeFx.offsetY || 0; }
                 else if (clicked === 'playlist') { initialOffsetX = state.playlistFx.offsetX || 0; initialOffsetY = state.playlistFx.offsetY || 0; }
+                else if (clicked === 'lyrics') { initialOffsetX = state.lyrics.offsetX || 0; initialOffsetY = state.lyrics.posY; }
                 canvas.style.cursor = 'grabbing';
             }
         }
@@ -2231,6 +3011,7 @@
             else if (draggingElement === 'text') { state.textFx.offsetX = initialOffsetX + dx; state.textFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'time') { state.timeFx.offsetX = initialOffsetX + dx; state.timeFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'playlist') { state.playlistFx.offsetX = initialOffsetX + dx; state.playlistFx.offsetY = initialOffsetY + dy; }
+            else if (draggingElement === 'lyrics') { state.lyrics.offsetX = initialOffsetX + dx; state.lyrics.posY = initialOffsetY + dy; updateUIFromState(); }
         }
 
         function handleDragEnd() { if (draggingElement) { draggingElement = null; canvas.style.cursor = 'default'; } }
@@ -2242,7 +3023,10 @@
             if(e.keyCode === 123) { e.preventDefault(); return false; } if(e.ctrlKey && e.shiftKey && e.keyCode === 73) { e.preventDefault(); return false; }
             if(e.ctrlKey && e.shiftKey && e.keyCode === 74) { e.preventDefault(); return false; } if(e.ctrlKey && e.keyCode === 85) { e.preventDefault(); return false; }
             const tag = e.target.tagName; const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
-            if (e.code === 'Space' && !isInput) { e.preventDefault(); playAudio(); }
+            if (e.code === 'Space' && !isInput) { 
+                e.preventDefault(); 
+                if (typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive) { doLiveSyncStamp(); } else { playAudio(); }
+            }
             if (e.ctrlKey && e.code === 'KeyZ') { if (!isInput) { e.preventDefault(); performUndo(); } }
         });
 
@@ -2263,7 +3047,6 @@
                             if (state.bg.effect !== 'normal') score += 5;
                             if (state.bg.weather && state.bg.weather.length > 0 && !state.bg.weather.includes('normal')) {
                                 score += 10;
-                                // Bonus poin jika cuaca reaktif audio
                                 if (state.bg.weatherReactive) score += 10;
                             }
                         }
@@ -2277,6 +3060,7 @@
                         
                         if (state.timeFx && state.timeFx.enabled) score += 5;
                         if (state.playlistFx && state.playlistFx.enabled) score += 5;
+                        if (state.lyrics && state.lyrics.enabled && currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].lyrics && playlist[currentTrackIndex].lyrics.length > 0) score += 15;
                     }
                 }
                 
