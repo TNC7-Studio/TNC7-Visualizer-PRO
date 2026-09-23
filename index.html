@@ -195,49 +195,132 @@
 
     <!-- Modal Lirik LRC -->
     <div id="lrc-modal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <div class="bg-[#161a22] border border-[#2a3142] p-4 rounded-xl flex flex-col max-w-2xl w-full h-[80vh] shadow-2xl">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-white font-bold"><i class="fa-solid fa-pen-to-square text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]"></i> Edit Lirik (LRC)</h3>
-                <button id="close-lrc-modal" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <div class="bg-[#161a22] border border-[#2a3142] p-4 rounded-xl flex flex-col max-w-7xl w-[95%] h-[90vh] shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h3 class="text-white font-bold text-lg"><i class="fa-solid fa-pen-to-square text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]"></i> Edit Lirik (LRC) & Live Sync</h3>
+                <button id="close-lrc-modal" class="text-gray-400 hover:text-white transition-colors bg-gray-800 hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div class="flex justify-between items-center bg-gray-800/80 p-2 rounded mb-2 border border-gray-700 shadow-inner">
-                <span class="text-[10px] text-gray-300">Tips: Putar lagu, klik baris lirik, tekan <kbd class="bg-gray-900 border border-gray-600 px-1.5 py-0.5 rounded text-yellow-400 font-bold shadow-[0_0_5px_rgba(250,204,21,0.3)]">F9</kbd> untuk menge-pas-kan waktu.</span>
-                <div class="flex gap-1">
-                    <button id="btn-shift-minus" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] transition-colors" title="Mundurkan baris terpilih 0.5 detik">-0.5s</button>
-                    <button id="btn-shift-plus" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] transition-colors" title="Majukan baris terpilih 0.5 detik">+0.5s</button>
-                    <button id="btn-tap-mode" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] transition-colors shadow-inner border border-gray-600" title="Gunakan tombol Spasi untuk men-stamp waktu dengan cepat"><i class="fa-solid fa-hand-pointer"></i> Mode Spasi: OFF</button>
-                    <button id="btn-stamp-time" class="bg-yellow-600 hover:bg-yellow-500 text-gray-900 px-3 py-1 rounded text-[10px] font-bold transition-colors shadow-[0_0_8px_rgba(250,204,21,0.4)]"><i class="fa-solid fa-stopwatch"></i> Stamp (F9)</button>
-                </div>
-            </div>
+            <div class="flex flex-1 gap-4 overflow-hidden min-h-0">
+                <!-- PANEL KIRI: Kontrol & Tools (Lebar Tetap) -->
+                <div class="flex flex-col gap-2 w-[450px] shrink-0 overflow-y-auto pr-2 custom-scrollbar">
+                    
+                    <!-- PANEL CARI LIRIK -->
+                    <div class="flex flex-col gap-2 border border-blue-900/60 bg-blue-900/10 rounded p-3 shadow-inner">
+                        <span class="text-xs text-blue-400 font-bold tracking-wider"><i class="fa-solid fa-cloud-arrow-down"></i> CARI LIRIK (INTERNET):</span>
+                        <div class="flex gap-2">
+                            <input type="text" id="lyricsSearchInput" class="custom-input flex-1 border-blue-800/50 text-sm py-1.5 h-auto" placeholder="Ketik Judul Lagu / Penyanyi...">
+                            <button class="bg-blue-600 hover:bg-blue-500 text-white rounded px-4 py-1.5 text-xs transition-colors font-bold" id="btnSearchLyrics"><i class="fa-solid fa-magnifying-glass"></i> Cari</button>
+                        </div>
+                    </div>
 
-            <div class="relative flex-1 w-full bg-[#0f1115] border border-[#2a3142] rounded overflow-hidden focus-within:border-yellow-400 focus-within:shadow-[0_0_15px_rgba(250,204,21,0.15)] transition-all">
-                <div id="lrc-highlight-backdrop" class="absolute inset-0 p-3 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words font-mono text-sm text-gray-300 pointer-events-none" aria-hidden="true"></div>
-                <textarea id="lrc-textarea" class="absolute inset-0 w-full h-full p-3 bg-transparent text-transparent caret-white font-mono text-sm outline-none resize-none whitespace-pre-wrap break-words" spellcheck="false" placeholder="[00:00.00] Baris lirik..."></textarea>
-            </div>
-            
-            <div class="mt-4 flex flex-col gap-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs text-gray-500">Format: [mm:ss.xx] Teks lirik</span>
-                    <div class="flex gap-2">
-                        <input type="file" id="import-lrc-file-input" accept=".lrc,.txt" class="hidden">
-                        <button id="btn-import-lrc-file" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-1.5" title="Impor file .lrc dari komputer Anda"><i class="fa-solid fa-file-import"></i> Impor File LRC</button>
-                        <button id="btn-sync-offset" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs transition-colors"><i class="fa-solid fa-clock"></i> Sesuaikan Waktu</button>
-                        <button id="save-lrc-btn" class="bg-red-600 hover:bg-red-500 text-white px-6 py-1.5 rounded font-bold transition-colors">Terapkan Lirik</button>
+                    <!-- KONTROL AUDIO -->
+                    <div class="flex items-center gap-3 bg-gray-900 p-3 rounded border border-[#2a3142]">
+                        <button id="modalPlayPauseBtn" class="bg-yellow-500 hover:bg-yellow-400 text-black rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-[0_0_10px_rgba(250,204,21,0.3)] shrink-0"><i class="fa-solid fa-play ml-1"></i></button>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <span id="modalTimeDisplay" class="text-xs text-gray-300 font-mono text-center font-bold">00:00 / 00:00</span>
+                            <input type="range" id="modalProgressSlider" class="w-full accent-yellow-500 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" min="0" max="100" value="0" step="0.1" data-no-indicator="true">
+                        </div>
+                    </div>
+
+                    <!-- KONTROL WAKTU (SHIFT) -->
+                    <div class="flex flex-col gap-2 bg-gray-800/80 p-3 rounded border border-gray-700 shadow-inner">
+                        <span class="text-[10px] text-gray-300 bg-black/30 p-1.5 rounded">Tips: Putar lagu, klik baris lirik, tekan <kbd class="bg-gray-900 border border-gray-600 px-1.5 py-0.5 rounded text-yellow-400 font-bold">F9</kbd> untuk menge-pas-kan waktu.</span>
+                        <div class="flex gap-1 justify-between">
+                            <div class="flex gap-1">
+                                <button id="btn-shift-minus" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-[10px] transition-colors font-medium" title="Mundurkan baris terpilih 0.5 detik">-0.5s</button>
+                                <button id="btn-shift-plus" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-[10px] transition-colors font-medium" title="Majukan baris terpilih 0.5 detik">+0.5s</button>
+                            </div>
+                            <div class="flex gap-1">
+                                <button id="btn-tap-mode" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1.5 rounded text-[10px] transition-colors shadow-inner border border-gray-600 font-medium" title="Gunakan tombol Spasi untuk men-stamp waktu dengan cepat"><i class="fa-solid fa-hand-pointer"></i> Mode Spasi: OFF</button>
+                                <button id="btn-stamp-time" class="bg-yellow-600 hover:bg-yellow-500 text-gray-900 px-3 py-1.5 rounded text-[10px] font-bold transition-colors shadow-[0_0_8px_rgba(250,204,21,0.4)]"><i class="fa-solid fa-stopwatch"></i> Stamp (F9)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL LIVE SYNC -->
+                    <div class="flex flex-col gap-2 bg-gray-800/50 p-3 rounded border border-gray-700">
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" id="liveSyncToggle" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-3 w-3">
+                                <span class="text-[11px] text-yellow-400 font-bold uppercase tracking-wider">🔴 Live Sync Otomatis</span>
+                            </label>
+                            <button id="btnResetSync" class="hidden bg-red-900/50 hover:bg-red-800 text-red-300 px-2.5 py-1 rounded text-[10px] transition-colors border border-red-800/50" title="Hapus semua waktu lirik (Mulai ulang)">Reset Waktu</button>
+                        </div>
+                        
+                        <div id="liveSyncPanel" class="hidden flex-col gap-2 mt-1 border border-yellow-700/50 bg-yellow-900/10 p-3 rounded shadow-inner">
+                            <div class="flex justify-between items-end mb-0.5">
+                                <span class="text-[10px] text-gray-400 font-bold">BARIS SELANJUTNYA:</span>
+                                <span id="syncProgressText" class="text-[10px] text-yellow-500 font-bold">0/0</span>
+                            </div>
+                            <div class="bg-black/80 border border-gray-700 p-3 rounded min-h-[50px] flex items-center justify-center shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
+                                <span id="syncNextLine" class="text-sm text-white font-bold text-center leading-relaxed">Pilih lagu & tempel lirik...</span>
+                            </div>
+                            <div class="flex gap-2 mt-1">
+                                <button id="btnSyncPrev" class="btn-custom bg-gray-700 px-4 py-2" title="Mundur 1 baris"><i class="fa-solid fa-angle-up text-sm"></i></button>
+                                <button id="btnSyncStamp" class="btn-custom flex-1 bg-yellow-600 hover:bg-yellow-500 text-black font-bold border-yellow-500 shadow-[0_0_10px_rgba(250,204,21,0.4)] transition-all text-sm">
+                                    STAMP WAKTU (Spasi)
+                                </button>
+                                <button id="btnSyncNext" class="btn-custom bg-gray-700 px-4 py-2" title="Lewati 1 baris"><i class="fa-solid fa-angle-down text-sm"></i></button>
+                            </div>
+                            <span class="text-[9px] text-gray-400 text-center mt-1"><i class="fa-solid fa-bolt text-yellow-500"></i> Kompensasi presisi ketukan (-150ms) otomatis aktif</span>
+                        </div>
+                    </div>
+                    
+                    <!-- LIRIK LOKAL -->
+                    <div class="flex flex-col gap-2 border border-green-900/60 bg-green-900/10 rounded p-3 shadow-inner mt-auto">
+                        <span class="text-xs text-green-400 font-bold tracking-wider"><i class="fa-solid fa-database"></i> LIRIK LOKAL (TERSIMPAN)</span>
+                        <div class="flex flex-col gap-2">
+                            <button class="bg-green-700 hover:bg-green-600 text-white rounded px-4 py-2 text-xs transition-colors shadow-sm flex items-center justify-center gap-2 font-medium" id="btnSaveLocalLyrics" title="Simpan lirik yang ada di Editor ini ke memori lokal aplikasi"><i class="fa-solid fa-floppy-disk"></i> Simpan ke Lokal</button>
+                            <div class="flex gap-2">
+                                <button class="flex-1 bg-green-700 hover:bg-green-600 text-white rounded px-2 py-1.5 text-[10px] transition-colors shadow-sm flex items-center justify-center gap-1.5" id="btnOpenLyricsManager" title="Buka Manajer Lirik"><i class="fa-solid fa-folder-open"></i> Manajer Lirik Lokal</button>
+                                <button class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded px-2 py-1.5 text-[10px] transition-colors shadow-sm flex items-center justify-center gap-1.5" id="btnExportLrcToPc" title="Unduh dan simpan lirik ke hard drive PC (.lrc)"><i class="fa-solid fa-download"></i> Simpan ke PC</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="border border-green-900/60 bg-green-900/10 rounded p-2 flex justify-between items-center shadow-inner">
-                    <span class="text-[11px] text-green-400 font-bold tracking-wider"><i class="fa-solid fa-database"></i> LIRIK LOKAL (TERSIMPAN)</span>
-                    <div class="flex gap-2">
-                        <button class="bg-green-700 hover:bg-green-600 text-white rounded px-4 py-1.5 text-[11px] transition-colors shadow-sm flex items-center gap-1.5" id="btnSaveLocalLyrics" title="Simpan lirik yang ada di Editor ini ke memori lokal aplikasi"><i class="fa-solid fa-floppy-disk"></i> Simpan ke Lokal</button>
-                        <button class="bg-green-700 hover:bg-green-600 text-white rounded px-4 py-1.5 text-[11px] transition-colors shadow-sm flex items-center gap-1.5" id="btnOpenLyricsManager" title="Buka Manajer Lirik"><i class="fa-solid fa-folder-open"></i> Manajer Lirik Lokal</button>
-                        <button class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-4 py-1.5 text-[11px] transition-colors shadow-sm flex items-center gap-1.5" id="btnExportLrcToPc" title="Unduh dan simpan lirik ke hard drive PC (.lrc)"><i class="fa-solid fa-download"></i> Simpan ke PC</button>
+
+                <!-- PANEL KANAN: Editor Lirik Teks (Lebar Fleksibel) -->
+                <div class="flex flex-col flex-1 h-full min-w-0">
+                    <div class="relative flex-1 w-full bg-[#0f1115] border border-[#2a3142] rounded-t-xl overflow-hidden focus-within:border-yellow-400 focus-within:shadow-[0_0_15px_rgba(250,204,21,0.15)] transition-all">
+                        <div id="lrc-highlight-backdrop" class="absolute inset-0 p-6 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words font-mono text-base text-gray-300 pointer-events-none leading-loose" aria-hidden="true"></div>
+                        <textarea id="lrc-textarea" class="absolute inset-0 w-full h-full p-6 bg-transparent text-transparent caret-white font-mono text-base outline-none resize-none whitespace-pre-wrap break-words leading-loose" spellcheck="false" placeholder="[00:00.00] Baris lirik..."></textarea>
+                    </div>
+                    
+                    <div class="bg-gray-800 border border-t-0 border-[#2a3142] rounded-b-xl p-3 flex justify-between items-center shrink-0">
+                        <span class="text-xs text-gray-400 hidden md:inline-block">Format: [mm:ss.xx] Teks lirik</span>
+                        <div class="text-center px-4 bg-gray-900/50 rounded py-1.5 border border-gray-700 mx-4 flex-1 max-w-[200px]">
+                            <span class="text-xs font-bold" id="lyricsStatusText">Belum ada lirik.</span>
+                        </div>
+                        <div class="flex gap-2 ml-auto">
+                            <input type="file" id="import-lrc-file-input" accept=".lrc,.txt" class="hidden">
+                            <button id="btn-import-lrc-file" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-xs transition-colors flex items-center gap-2 font-medium" title="Impor file .lrc dari komputer Anda"><i class="fa-solid fa-file-import"></i> Impor File LRC</button>
+                            <button id="btn-sync-offset" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-xs transition-colors flex items-center gap-2 font-medium"><i class="fa-solid fa-clock"></i> Sesuaikan Waktu</button>
+                            <button id="save-lrc-btn" class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded text-sm font-bold transition-colors shadow-[0_0_10px_rgba(220,38,38,0.4)]">Terapkan Lirik</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <style>
+        /* Custom scrollbar untuk panel kiri di modal lrc */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #2a3142;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
 
     <!-- Modal Profil Presets -->
     <div id="preset-modal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 transition-opacity duration-300 opacity-0 pointer-events-none">
@@ -778,49 +861,11 @@
                 </div>
                 
                 <div class="panel-content mt-1">
-                    <div class="border border-blue-900/60 bg-blue-900/10 rounded p-1 flex flex-col gap-1">
-                        <span class="text-[9px] text-blue-400 font-bold tracking-wider"><i class="fa-solid fa-cloud-arrow-down"></i> CARI LIRIK MENTAH (INTERNET)</span>
-                        <div class="flex gap-1">
-                            <input type="text" id="lyricsSearchInput" class="custom-input flex-1 border-blue-800/50 text-[10px]" placeholder="Judul Lagu / Penyanyi">
-                            <button class="bg-blue-600 hover:bg-blue-500 text-white rounded px-3 text-[10px] transition-colors" id="btnSearchLyrics"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        </div>
-                    </div>
-                    
-                    <button class="btn-custom w-full mt-1 border-[#ca8a04]/50 text-[#eab308] hover:bg-[#ca8a04]/10 py-1" id="btnEditLrc">
-                        <i class="fa-solid fa-pen-to-square"></i> Edit Teks Lirik (LRC) Manual
+                    <button class="btn-custom w-full mt-1 border-[#ca8a04]/50 text-[#eab308] hover:bg-[#ca8a04]/10 py-1.5 font-bold shadow-sm" id="btnEditLrc">
+                        <i class="fa-solid fa-pen-to-square"></i> BUKA EDITOR LIRIK (LRC) & SYNC
                     </button>
                     
-                    <div class="flex items-center gap-1 mt-1 bg-gray-800/50 p-1 rounded border border-gray-700">
-                        <label class="flex items-center gap-1 cursor-pointer flex-1">
-                            <input type="checkbox" id="liveSyncToggle" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
-                            <span class="text-[9px] text-yellow-400 font-bold uppercase tracking-wider">🔴 Live Sync (Panel)</span>
-                        </label>
-                        <button id="btnResetSync" class="btn-custom hidden text-[8px] border-red-500/50 text-red-400 px-1 py-0" title="Hapus semua waktu lirik (Mulai ulang)">Reset</button>
-                    </div>
-                    
-                    <div id="liveSyncPanel" class="hidden flex-col gap-1 mt-0.5 border border-yellow-700/50 bg-yellow-900/10 p-1.5 rounded">
-                        <div class="flex justify-between items-end mb-0.5">
-                            <span class="text-[8px] text-gray-400 font-bold">BARIS SELANJUTNYA:</span>
-                            <span id="syncProgressText" class="text-[8px] text-yellow-500 font-bold">0/0</span>
-                        </div>
-                        <div class="bg-black/60 border border-gray-700 p-1 rounded min-h-[20px] flex items-center justify-center shadow-inner">
-                            <span id="syncNextLine" class="text-[10px] text-white font-bold text-center leading-tight">Pilih lagu & tempel lirik...</span>
-                        </div>
-                        <div class="flex gap-1 mt-1">
-                            <button id="btnSyncPrev" class="btn-custom bg-gray-700 px-2 py-1" title="Mundur 1 baris"><i class="fa-solid fa-angle-up text-[10px]"></i></button>
-                            <button id="btnSyncStamp" class="btn-custom flex-1 bg-yellow-600 hover:bg-yellow-500 text-black font-bold border-yellow-500 shadow-[0_0_8px_rgba(250,204,21,0.4)] transition-all">
-                                STAMP (Spasi)
-                            </button>
-                            <button id="btnSyncNext" class="btn-custom bg-gray-700 px-2 py-1" title="Lewati 1 baris"><i class="fa-solid fa-angle-down text-[10px]"></i></button>
-                        </div>
-                        <span class="text-[7.5px] text-gray-400 text-center mt-0.5"><i class="fa-solid fa-bolt text-yellow-500"></i> Kompensasi presisi vokal otomatis aktif</span>
-                    </div>
-                    
-                    <div class="text-center mt-1">
-                        <span class="text-[9px] text-gray-500 font-bold" id="lyricsStatusText">Belum ada lirik.</span>
-                    </div>
-                    
-                    <div class="control-row mt-1">
+                    <div class="control-row mt-2">
                         <span class="control-label text-[9px] w-10">Font</span>
                         <div class="flex-1">
                             <select class="custom-select" id="lyricsFontSelect">
@@ -1410,10 +1455,10 @@
             const statusTxt = document.getElementById('lyricsStatusText');
             if (currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].lyrics && playlist[currentTrackIndex].lyrics.length > 0) {
                 statusTxt.textContent = `${playlist[currentTrackIndex].lyrics.length} baris lirik dimuat.`;
-                statusTxt.className = "text-[9px] text-green-500 font-bold";
+                statusTxt.className = "text-xs text-green-500 font-bold";
             } else {
                 statusTxt.textContent = "Belum ada lirik.";
-                statusTxt.className = "text-[9px] text-gray-500 font-bold";
+                statusTxt.className = "text-xs text-gray-500 font-bold";
             }
             // Cegah reset (loop) ke baris pertama jika dipanggil dari tombol Spasi Live Sync
             if (!skipLiveSyncInit && typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive && typeof initLiveSync === 'function') initLiveSync();
@@ -1424,7 +1469,7 @@
             if (!query) { showNotification("Masukkan judul lagu / penyanyi!"); return; }
             
             const statusTxt = document.getElementById('lyricsStatusText');
-            statusTxt.textContent = "Mencari..."; statusTxt.className = "text-[9px] text-yellow-500 font-bold";
+            statusTxt.textContent = "Mencari..."; statusTxt.className = "text-xs text-yellow-500 font-bold";
             try {
                 const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
                 const data = await res.json();
@@ -1446,6 +1491,13 @@
                         playlist[currentTrackIndex].rawLRC = raw;
                         playlist[currentTrackIndex].lyrics = parseLRC(raw);
                         
+                        // UPDATE TEXTAREA DI EDITOR LIRIK JIKA TERBUKA
+                        const lrcTextarea = document.getElementById('lrc-textarea');
+                        if (lrcTextarea) {
+                            lrcTextarea.value = raw;
+                            if (typeof updateLrcHighlight === 'function') updateLrcHighlight();
+                        }
+
                         // Segarkan panel Live Sync otomatis jika sedang aktif
                         if (typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive && typeof initLiveSync === 'function') {
                             initLiveSync();
@@ -1455,14 +1507,14 @@
                         showNotification("Teks lirik bersih berhasil diunduh!");
                     } else {
                         showNotification("Pilih lagu di playlist terlebih dahulu!");
-                        statusTxt.textContent = "Belum ada lagu dipilih."; statusTxt.className = "text-[9px] text-red-500 font-bold";
+                        statusTxt.textContent = "Belum ada lagu dipilih."; statusTxt.className = "text-xs text-red-500 font-bold";
                     }
                 } else {
-                     statusTxt.textContent = "Lirik tidak ditemukan."; statusTxt.className = "text-[9px] text-red-500 font-bold";
+                     statusTxt.textContent = "Lirik tidak ditemukan."; statusTxt.className = "text-xs text-red-500 font-bold";
                      showNotification("Teks lirik tidak ditemukan untuk lagu ini.");
                 }
             } catch (e) {
-                statusTxt.textContent = "Gagal mencari lirik (Error)."; statusTxt.className = "text-[9px] text-red-500 font-bold";
+                statusTxt.textContent = "Gagal mencari lirik (Error)."; statusTxt.className = "text-xs text-red-500 font-bold";
             }
         });
 
@@ -1650,31 +1702,76 @@
         const lrcTextarea = document.getElementById('lrc-textarea');
         const lrcBackdrop = document.getElementById('lrc-highlight-backdrop');
 
-        function updateLrcHighlight() {
+        function updateLrcHighlight(currentTime = -1) {
             let text = lrcTextarea.value;
-            // Hindari HTML injeksi di backdrop
-            text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            // Highlight format waktu menjadi kuning menyala
-            text = text.replace(/(\[\d{2,}:\d{2}\.\d{1,3}\])/g, '<span class="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,1)] font-bold">$1</span>');
-            // Pastikan scroll sama hingga baris terbawah
-            if (text.endsWith('\n')) text += ' ';
-            lrcBackdrop.innerHTML = text;
+            let lines = text.split('\n');
+            let resultHTML = '';
+            let activeLineIndex = -1;
+
+            if (currentTime >= 0) {
+                for (let i = lines.length - 1; i >= 0; i--) {
+                    let match = lines[i].match(/\[(\d{2,}):(\d{2})\.(\d{1,3})\]/);
+                    if (match) {
+                        let m = parseInt(match[1]);
+                        let s = parseInt(match[2]);
+                        let msStr = match[3];
+                        if(msStr.length === 2) msStr += '0';
+                        if(msStr.length === 1) msStr += '00';
+                        let timeInSec = m * 60 + s + (parseInt(msStr) / 1000);
+                        if (currentTime >= timeInSec) {
+                            activeLineIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                let safeLine = lines[i].replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                safeLine = safeLine.replace(/(\[\d{2,}:\d{2}\.\d{1,3}\])/g, '<span class="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,1)] font-bold">$1</span>');
+                
+                if (i === activeLineIndex && currentTime >= 0) {
+                    resultHTML += `<span class="bg-green-900/60 text-green-300 block border-l-4 border-green-500 pl-2 -ml-2 py-0.5 rounded-r shadow-[inset_4px_0_10px_rgba(34,197,94,0.2)] font-bold transition-all">${safeLine}</span>\n`;
+                } else {
+                    resultHTML += `${safeLine}\n`;
+                }
+            }
+            if (text.endsWith('\n')) resultHTML += ' ';
+            lrcBackdrop.innerHTML = resultHTML;
         }
 
-        lrcTextarea.addEventListener('input', updateLrcHighlight);
+        lrcTextarea.addEventListener('input', () => {
+            updateLrcHighlight(audioElement && !audioElement.paused ? audioElement.currentTime : -1);
+            updateLrcHighlightRealtime();
+        });
         lrcTextarea.addEventListener('scroll', () => { lrcBackdrop.scrollTop = lrcTextarea.scrollTop; });
+
+        function updateLrcHighlightRealtime() {
+            updateLrcHighlight(audioElement ? audioElement.currentTime : -1);
+        }
+
+        lrcTextarea.addEventListener('input', () => {
+            updateLrcHighlight(audioElement && !audioElement.paused ? audioElement.currentTime : -1);
+        });
 
         document.getElementById('btnEditLrc').addEventListener('click', () => {
             if (currentTrackIndex < 0 || currentTrackIndex >= playlist.length) {
                 showNotification("Pilih lagu di playlist terlebih dahulu!"); return;
             }
             lrcTextarea.value = playlist[currentTrackIndex].rawLRC || "";
-            updateLrcHighlight();
+            updateLrcHighlight(audioElement ? audioElement.currentTime : -1);
             lrcModal.classList.remove('opacity-0', 'pointer-events-none');
         });
 
         document.getElementById('close-lrc-modal').addEventListener('click', () => {
             lrcModal.classList.add('opacity-0', 'pointer-events-none');
+        });
+        
+        // Logika Audio Controls di dalam Modal LRC
+        document.getElementById('modalPlayPauseBtn').addEventListener('click', () => playAudio());
+        document.getElementById('modalProgressSlider').addEventListener('input', (e) => {
+            if(!audioElement.duration || isRecording) return;
+            audioElement.currentTime = (e.target.value / 100) * audioElement.duration;
         });
 
         // Fitur Edit Efisien: Mengambil info baris kursor
@@ -1687,7 +1784,7 @@
             return { lineStart, lineEnd, text: val.substring(lineStart, lineEnd) };
         }
 
-        // Fitur Edit Efisien: Stempel Waktu (Stamp)
+        // Fitur Edit Efisien: Stempel Waktu (Stamp) Realtime
         function stampCurrentTimeLrc() {
             if (isOfflineRendering || !audioElement || isNaN(audioElement.currentTime)) return;
             const curTime = audioElement.currentTime;
@@ -1708,13 +1805,27 @@
 
             const newVal = val.substring(0, info.lineStart) + lineText + val.substring(info.lineEnd);
             lrcTextarea.value = newVal;
-            updateLrcHighlight();
+            updateLrcHighlight(curTime);
 
             let nextLineStart = info.lineStart + lineText.length + 1;
             if (nextLineStart <= newVal.length) {
                 lrcTextarea.setSelectionRange(nextLineStart, nextLineStart);
             }
+            
+            // Auto scroll textarea agar kursor selalu berada dalam jangkauan pandang
+            const lines = newVal.substring(0, nextLineStart).split('\n').length;
+            lrcTextarea.scrollTop = Math.max(0, (lines - 5) * 32);
+            const lrcBackdrop = document.getElementById('lrc-highlight-backdrop');
+            if (lrcBackdrop) lrcBackdrop.scrollTop = lrcTextarea.scrollTop;
+            
             lrcTextarea.focus();
+            
+            // TERAPKAN LANGSUNG KE VISUALIZER (REALTIME SYNC)
+            if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                playlist[currentTrackIndex].rawLRC = newVal;
+                playlist[currentTrackIndex].lyrics = parseLRC(newVal);
+                updateLyricsStatus(true);
+            }
         }
 
         document.getElementById('btn-stamp-time').addEventListener('click', stampCurrentTimeLrc);
@@ -1757,6 +1868,13 @@
              updateLrcHighlight();
              lrcTextarea.setSelectionRange(selStart, selStart + newText.length);
              lrcTextarea.focus();
+             
+             // TERAPKAN LANGSUNG KE VISUALIZER (REALTIME SYNC)
+             if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                 playlist[currentTrackIndex].rawLRC = lrcTextarea.value;
+                 playlist[currentTrackIndex].lyrics = parseLRC(lrcTextarea.value);
+                 updateLyricsStatus(true);
+             }
         }
 
         document.getElementById('btn-shift-minus').addEventListener('click', () => shiftSelectedTimeLrc(-0.5));
@@ -1835,6 +1953,19 @@
             playlist[currentTrackIndex].rawLRC = newRaw;
             playlist[currentTrackIndex].lyrics = parseLRC(newRaw);
             
+            // UPDATE TEXTAREA DI PANEL KANAN SECARA REALTIME
+            const lrcTextarea = document.getElementById('lrc-textarea');
+            const lrcBackdrop = document.getElementById('lrc-highlight-backdrop');
+            if (lrcTextarea) {
+                lrcTextarea.value = newRaw;
+                updateLrcHighlight(curTime);
+                
+                // Auto scroll textarea agar baris yang di-stamp selalu terlihat
+                const linesToScroll = Math.max(0, targetLineIdx - 4);
+                lrcTextarea.scrollTop = linesToScroll * 32;
+                if (lrcBackdrop) lrcBackdrop.scrollTop = lrcTextarea.scrollTop;
+            }
+            
             liveSyncIndex++; updateLiveSyncUI(); updateLyricsStatus(true);
             
             const btn = document.getElementById('btnSyncStamp');
@@ -1850,8 +1981,17 @@
             if(confirm("Hapus semua format waktu (timestamp) pada lirik ini dan mulai sinkronisasi dari awal?")) {
                 let rawLines = (playlist[currentTrackIndex].rawLRC || "").split('\n');
                 for (let i = 0; i < rawLines.length; i++) { rawLines[i] = rawLines[i].replace(/\[\d{2,}:\d{2}\.\d{1,3}\]/g, '').trim(); }
-                playlist[currentTrackIndex].rawLRC = rawLines.join('\n');
-                playlist[currentTrackIndex].lyrics = parseLRC(playlist[currentTrackIndex].rawLRC);
+                let newRaw = rawLines.join('\n');
+                playlist[currentTrackIndex].rawLRC = newRaw;
+                playlist[currentTrackIndex].lyrics = parseLRC(newRaw);
+                
+                // Perbarui Textarea secara realtime
+                const lrcTextarea = document.getElementById('lrc-textarea');
+                if (lrcTextarea) {
+                    lrcTextarea.value = newRaw;
+                    updateLrcHighlight(-1);
+                }
+                
                 initLiveSync(); updateLyricsStatus(); showNotification("Waktu lirik berhasil di-reset.");
             }
         });
@@ -2116,8 +2256,19 @@
             const current = audioElement.currentTime; const duration = audioElement.duration;
             timeDisplay.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
             const percent = (current / duration) * 100; progressBar.style.width = `${percent}%`; progressHandle.style.left = `${percent}%`;
+            
+            // Update UI Audio di dalam Modal LRC jika sedang terbuka
+            if (!lrcModal.classList.contains('opacity-0')) {
+                updateLrcHighlight(current);
+                document.getElementById('modalTimeDisplay').textContent = `${formatTime(current)} / ${formatTime(duration)}`;
+                document.getElementById('modalProgressSlider').value = percent || 0;
+            }
         });
-        function updatePlayBtn() { playBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play ml-1"></i>'; }
+        function updatePlayBtn() { 
+            playBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play ml-1"></i>'; 
+            const modalBtn = document.getElementById('modalPlayPauseBtn');
+            if(modalBtn) { modalBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play ml-0.5"></i>'; }
+        }
         function playAudio(forcePlay = false) {
             if(!audioElement.src || isOfflineRendering) return;
             if(audioContext && audioContext.state === 'suspended') audioContext.resume();
