@@ -454,7 +454,7 @@
                         <span>CUACA / PARTIKEL</span>
                     </div>
                     <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation();">
-                        <input type="checkbox" id="weatherEnable" checked class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
+                        <input type="checkbox" id="weatherEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
                         <span class="text-[9px] text-white font-bold uppercase">Tampilkan</span>
                     </label>
                 </div>
@@ -470,8 +470,8 @@
 
                     <div class="flex items-center gap-1">
                         <div class="flex flex-wrap gap-1 flex-1" id="bgWeatherGroup">
-                            <button class="btn-custom" data-val="normal">Cerah</button>
-                            <button class="btn-custom btn-active" data-val="salju">Salju</button>
+                            <button class="btn-custom btn-active" data-val="normal">Cerah</button>
+                            <button class="btn-custom" data-val="salju">Salju</button>
                             <button class="btn-custom" data-val="hujan_emas">H.Emas</button>
                             <button class="btn-custom" data-val="hujan_air">H.Air</button>
                             <button class="btn-custom" data-val="petir">Petir</button>
@@ -1069,7 +1069,7 @@
         const state = {
             viz: { enabled: true, align: 'full', size: 0.5, width: 0.5, opacity: 1.0, type: 'modern_cyber_bars', offsetX: 0, offsetY: 0, colorMode: 'auto', staticColor: '#facc15', argbSpeed: 15 },
             viz2: { enabled: false, align: 'full', size: 0.3, width: 0.5, opacity: 1.0, type: 'wave_double', offsetX: 0, offsetY: -150, colorMode: 'auto', staticColor: '#3b82f6', argbSpeed: 20 },
-            bg: { color: '#0f1115', image: null, imgElement: null, effect: 'normal', weather: ['salju'], weatherProps: { salju: {intensity: 50, speed: 50}, hujan_emas: {intensity: 50, speed: 50}, hujan_air: {intensity: 50, speed: 50}, petir: {intensity: 50, speed: 50}, asap_warna: {intensity: 50, speed: 50} }, darkness: 0, pulseIntensity: 0.50, scale: 1.0, snowIntensity: 50, weatherSpeed: 50, mirror: false, autoSlideshow: false, slideshowInterval: 10, beatDropFx: false, crossfade: true, weatherReactive: false },
+            bg: { color: '#0f1115', image: null, imgElement: null, effect: 'normal', weather: ['normal'], weatherProps: { salju: {intensity: 50, speed: 50}, hujan_emas: {intensity: 50, speed: 50}, hujan_air: {intensity: 50, speed: 50}, petir: {intensity: 50, speed: 50}, asap_warna: {intensity: 50, speed: 50} }, darkness: 0, pulseIntensity: 0.50, scale: 1.0, snowIntensity: 50, weatherSpeed: 50, mirror: false, autoSlideshow: false, slideshowInterval: 10, beatDropFx: false, crossfade: true, weatherReactive: false },
             overlay: { element: null, type: null, lapisan: 'depan', blend: 'normal', size: 0.5, opacity: 1, speed: 0.5, anim: 'none', offsetX: 0, offsetY: 0, animTime: 0, lastDrawTime: 0 },
             textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50 },
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
@@ -1120,7 +1120,7 @@
         let bgPrevElement = null; let bgCrossfadeStartTime = 0; let isBgCrossfading = false;
         
         let activeVizTab = 'viz';
-        let activeWeatherTab = 'salju';
+        let activeWeatherTab = 'normal';
 
         function getRenderTime() { return isOfflineRendering ? window.offlineCurrentTime : Date.now() / 1000; }
         function showNotification(msg) {
@@ -1163,22 +1163,21 @@
         document.getElementById('renderResSelect').addEventListener('change', (e) => { state.render.res = parseInt(e.target.value); resizeCanvas(); });
         document.getElementById('renderFpsSelect').addEventListener('change', (e) => { state.render.fps = parseInt(e.target.value); });
         
-        document.querySelectorAll('#bgWeatherTabGroup button').forEach(btn => {
-            btn.addEventListener('click', () => { switchWeatherTab(btn.dataset.weather); });
+        document.querySelectorAll('#bgWeatherGroup button').forEach(btn => {
+            btn.addEventListener('click', () => { switchWeatherTab(btn.dataset.val); });
         });
 
         document.getElementById('weatherEnable').addEventListener('change', (e) => {
-            if (activeWeatherTab === 'normal') {
-                if (e.target.checked) state.bg.weather = ['normal'];
-            } else {
-                if (e.target.checked) {
-                    if (!state.bg.weather.includes(activeWeatherTab)) state.bg.weather.push(activeWeatherTab);
-                    state.bg.weather = state.bg.weather.filter(w => w !== 'normal');
-                } else {
-                    state.bg.weather = state.bg.weather.filter(w => w !== activeWeatherTab);
-                    if (state.bg.weather.length === 0) state.bg.weather = ['normal'];
+            if (e.target.checked) {
+                if (state.bg.weather.includes('normal')) {
+                    state.bg.weather = ['salju'];
+                    activeWeatherTab = 'salju';
                 }
+            } else {
+                state.bg.weather = ['normal'];
+                activeWeatherTab = 'normal';
             }
+            updateWeatherUI();
         });
         
         document.getElementById('snowIntensitySlider').addEventListener('input', (e) => { 
@@ -3115,24 +3114,67 @@
             else { panel.classList.remove('border-blue-900/50'); panel.classList.add('border-gray-700'); }
         }
 
-        function switchWeatherTab(tabId) {
-            activeWeatherTab = tabId;
-            document.querySelectorAll('#bgWeatherTabGroup button').forEach(b => {
-                if (b.dataset.weather === tabId) b.classList.add('btn-active'); else b.classList.remove('btn-active');
+        function updateWeatherUI() {
+            document.querySelectorAll('#bgWeatherGroup button').forEach(b => {
+                const val = b.dataset.val;
+                if (state.bg.weather.includes(val)) {
+                    b.classList.add('btn-active');
+                } else {
+                    b.classList.remove('btn-active');
+                }
+                
+                // Tambahkan border putih untuk menandakan efek cuaca mana yang sedang dikendalikan slider
+                if (val === activeWeatherTab && val !== 'normal') {
+                    b.style.borderColor = '#ffffff';
+                    b.style.borderWidth = '1px';
+                } else {
+                    b.style.borderColor = '';
+                    b.style.borderWidth = '';
+                }
             });
             
-            const cb = document.getElementById('weatherEnable');
-            if (tabId === 'normal') { cb.checked = state.bg.weather.includes('normal') || state.bg.weather.length === 0; } 
-            else { cb.checked = state.bg.weather.includes(tabId); }
+            const isAnyActive = state.bg.weather.length > 0 && !state.bg.weather.includes('normal');
+            document.getElementById('weatherEnable').checked = isAnyActive;
             
             let intVal = 50, spdVal = 50;
-            if (tabId !== 'normal' && state.bg.weatherProps && state.bg.weatherProps[tabId]) {
-                intVal = state.bg.weatherProps[tabId].intensity; spdVal = state.bg.weatherProps[tabId].speed;
+            if (activeWeatherTab !== 'normal' && state.bg.weatherProps && state.bg.weatherProps[activeWeatherTab]) {
+                intVal = state.bg.weatherProps[activeWeatherTab].intensity;
+                spdVal = state.bg.weatherProps[activeWeatherTab].speed;
             } else {
-                intVal = state.bg.snowIntensity; spdVal = state.bg.weatherSpeed;
+                intVal = state.bg.snowIntensity || 50;
+                spdVal = state.bg.weatherSpeed || 50;
             }
             updateSliderIndicator('snowIntensitySlider', intVal);
             updateSliderIndicator('weatherSpeedSlider', spdVal);
+        }
+
+        function switchWeatherTab(tabId) {
+            if (tabId === 'normal') {
+                state.bg.weather = ['normal'];
+                activeWeatherTab = 'normal';
+            } else {
+                state.bg.weather = state.bg.weather.filter(w => w !== 'normal');
+                if (state.bg.weather.includes(tabId)) {
+                    if (activeWeatherTab === tabId) {
+                        // Jika sudah aktif dan terfokus, maka matikan
+                        state.bg.weather = state.bg.weather.filter(w => w !== tabId);
+                        if (state.bg.weather.length === 0) {
+                            state.bg.weather = ['normal'];
+                            activeWeatherTab = 'normal';
+                        } else {
+                            activeWeatherTab = state.bg.weather[state.bg.weather.length - 1];
+                        }
+                    } else {
+                        // Jika sudah aktif tapi tidak fokus, maka pindahkan fokus slider ke efek ini
+                        activeWeatherTab = tabId;
+                    }
+                } else {
+                    // Jika belum aktif, hidupkan dan pindahkan fokus
+                    state.bg.weather.push(tabId);
+                    activeWeatherTab = tabId;
+                }
+            }
+            updateWeatherUI();
         }
 
         function updateUIFromState() {
@@ -3157,7 +3199,7 @@
             setBtn('lyricsEffectGroup', state.lyrics.effect);
 
             switchVizTab(activeVizTab);
-            switchWeatherTab(activeWeatherTab);
+            updateWeatherUI();
 
             setCheck('bgMirrorEnable', state.bg.mirror); setBtn('bgEffectGroup', state.bg.effect); setVal('bgDarknessSlider', state.bg.darkness * 100); setVal('bgPulseIntensitySlider', state.bg.pulseIntensity * 100); setVal('bgScaleSlider', state.bg.scale * 100);
             
