@@ -225,7 +225,7 @@
 
                     <!-- KONTROL WAKTU (SHIFT) -->
                     <div class="flex flex-col gap-2 bg-gray-800/80 p-3 rounded border border-gray-700 shadow-inner">
-                        <span class="text-[10px] text-gray-300 bg-black/30 p-1.5 rounded">Tips: Putar lagu, klik baris lirik, tekan <kbd class="bg-gray-900 border border-gray-600 px-1.5 py-0.5 rounded text-yellow-400 font-bold">F9</kbd> untuk menge-pas-kan waktu.</span>
+                        <span class="hidden text-[10px] text-gray-300 bg-black/30 p-1.5 rounded">Tips: Putar lagu, klik baris lirik, tekan <kbd class="bg-gray-900 border border-gray-600 px-1.5 py-0.5 rounded text-yellow-400 font-bold">F9</kbd> untuk menge-pas-kan waktu.</span>
                         <div class="flex gap-1 justify-between">
                             <div class="flex gap-1">
                                 <button id="btn-shift-minus" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-[10px] transition-colors font-medium" title="Mundurkan baris terpilih 0.5 detik">-0.5s</button>
@@ -233,7 +233,7 @@
                             </div>
                             <div class="flex gap-1">
                                 <button id="btn-tap-mode" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1.5 rounded text-[10px] transition-colors shadow-inner border border-gray-600 font-medium" title="Gunakan tombol Spasi untuk men-stamp waktu dengan cepat"><i class="fa-solid fa-hand-pointer"></i> Mode Spasi: OFF</button>
-                                <button id="btn-stamp-time" class="bg-yellow-600 hover:bg-yellow-500 text-gray-900 px-3 py-1.5 rounded text-[10px] font-bold transition-colors shadow-[0_0_8px_rgba(250,204,21,0.4)]"><i class="fa-solid fa-stopwatch"></i> Stamp (F9)</button>
+                                <button id="btn-stamp-time" class="hidden bg-yellow-600 hover:bg-yellow-500 text-gray-900 px-3 py-1.5 rounded text-[10px] font-bold transition-colors shadow-[0_0_8px_rgba(250,204,21,0.4)]"><i class="fa-solid fa-stopwatch"></i> Stamp (F9)</button>
                             </div>
                         </div>
                     </div>
@@ -289,13 +289,13 @@
                     
                     <div class="bg-gray-800 border border-t-0 border-[#2a3142] rounded-b-xl p-3 flex justify-between items-center shrink-0">
                         <span class="text-xs text-gray-400 hidden md:inline-block">Format: [mm:ss.xx] Teks lirik</span>
-                        <div class="text-center px-4 bg-gray-900/50 rounded py-1.5 border border-gray-700 mx-4 flex-1 max-w-[200px]">
-                            <span class="text-xs font-bold" id="lyricsStatusText">Belum ada lirik.</span>
-                        </div>
-                        <div class="flex gap-2 ml-auto">
+                        <div class="flex gap-2 ml-auto items-center">
+                            <div class="text-center px-4 bg-gray-900/50 rounded py-1.5 border border-gray-700 mx-4 max-w-[200px]">
+                                <span class="text-xs font-bold" id="lyricsStatusText">Belum ada lirik.</span>
+                            </div>
                             <input type="file" id="import-lrc-file-input" accept=".lrc,.txt" class="hidden">
                             <button id="btn-import-lrc-file" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-xs transition-colors flex items-center gap-2 font-medium" title="Impor file .lrc dari komputer Anda"><i class="fa-solid fa-file-import"></i> Impor File LRC</button>
-                            <button id="btn-sync-offset" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-xs transition-colors flex items-center gap-2 font-medium"><i class="fa-solid fa-clock"></i> Sesuaikan Waktu</button>
+                            <button id="btn-sync-offset" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-xs transition-colors flex items-center gap-2 font-medium"><i class="fa-solid fa-clock"></i> Sesuaikan Waktu</button>
                             <button id="save-lrc-btn" class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded text-sm font-bold transition-colors shadow-[0_0_10px_rgba(220,38,38,0.4)]">Terapkan Lirik</button>
                         </div>
                     </div>
