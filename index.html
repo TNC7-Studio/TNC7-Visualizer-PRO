@@ -216,11 +216,24 @@
                 <textarea id="lrc-textarea" class="absolute inset-0 w-full h-full p-3 bg-transparent text-transparent caret-white font-mono text-sm outline-none resize-none whitespace-pre-wrap break-words" spellcheck="false" placeholder="[00:00.00] Baris lirik..."></textarea>
             </div>
             
-            <div class="mt-4 flex justify-between items-center">
-                <span class="text-xs text-gray-500">Format: [mm:ss.xx] Teks lirik</span>
-                <div class="flex gap-2">
-                    <button id="btn-sync-offset" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs transition-colors"><i class="fa-solid fa-clock"></i> Sesuaikan Waktu</button>
-                    <button id="save-lrc-btn" class="bg-red-600 hover:bg-red-500 text-white px-6 py-1.5 rounded font-bold transition-colors">Simpan</button>
+            <div class="mt-4 flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500">Format: [mm:ss.xx] Teks lirik</span>
+                    <div class="flex gap-2">
+                        <input type="file" id="import-lrc-file-input" accept=".lrc,.txt" class="hidden">
+                        <button id="btn-import-lrc-file" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-1.5" title="Impor file .lrc dari komputer Anda"><i class="fa-solid fa-file-import"></i> Impor File LRC</button>
+                        <button id="btn-sync-offset" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs transition-colors"><i class="fa-solid fa-clock"></i> Sesuaikan Waktu</button>
+                        <button id="save-lrc-btn" class="bg-red-600 hover:bg-red-500 text-white px-6 py-1.5 rounded font-bold transition-colors">Terapkan Lirik</button>
+                    </div>
+                </div>
+                
+                <div class="border border-green-900/60 bg-green-900/10 rounded p-2 flex justify-between items-center shadow-inner">
+                    <span class="text-[11px] text-green-400 font-bold tracking-wider"><i class="fa-solid fa-database"></i> LIRIK LOKAL (TERSIMPAN)</span>
+                    <div class="flex gap-2">
+                        <button class="bg-green-700 hover:bg-green-600 text-white rounded px-4 py-1.5 text-[11px] transition-colors shadow-sm flex items-center gap-1.5" id="btnSaveLocalLyrics" title="Simpan lirik yang ada di Editor ini ke memori lokal aplikasi"><i class="fa-solid fa-floppy-disk"></i> Simpan ke Lokal</button>
+                        <button class="bg-green-700 hover:bg-green-600 text-white rounded px-4 py-1.5 text-[11px] transition-colors shadow-sm flex items-center gap-1.5" id="btnOpenLyricsManager" title="Buka Manajer Lirik"><i class="fa-solid fa-folder-open"></i> Manajer Lirik Lokal</button>
+                        <button class="bg-indigo-600 hover:bg-indigo-500 text-white rounded px-4 py-1.5 text-[11px] transition-colors shadow-sm flex items-center gap-1.5" id="btnExportLrcToPc" title="Unduh dan simpan lirik ke hard drive PC (.lrc)"><i class="fa-solid fa-download"></i> Simpan ke PC</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -247,6 +260,26 @@
                 <button id="btnExportJson" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1.5 rounded transition-colors border border-gray-600"><i class="fa-solid fa-file-export"></i> Ekspor JSON</button>
                 <input type="file" id="importJsonInput" accept=".json" class="hidden">
                 <button id="btnImportJson" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1.5 rounded transition-colors border border-gray-600" onclick="document.getElementById('importJsonInput').click()"><i class="fa-solid fa-file-import"></i> Impor JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Manajer Lirik -->
+    <div id="lyrics-manager-modal" class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="bg-[#161a22] border border-[#2a3142] p-4 rounded-xl flex flex-col w-96 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-white font-bold"><i class="fa-solid fa-folder-open text-green-400"></i> Manajer Lirik Lokal</h3>
+                <button id="close-lyrics-manager" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="bg-[#0f1115] border border-[#2a3142] rounded h-64 overflow-y-auto p-1 flex flex-col gap-1 mb-1" id="lyricsListContainer">
+                <!-- List Lirik akan dimuat di sini -->
+            </div>
+            <span class="text-[9px] text-gray-500 text-center mt-2">Klik judul lagu pada list di atas untuk menerapkan lirik ke audio saat ini.</span>
+            
+            <div class="flex gap-2 justify-between border-t border-[#2a3142] pt-3 mt-2">
+                <button id="btnExportLyricsJson" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1.5 rounded transition-colors border border-gray-600"><i class="fa-solid fa-file-export"></i> Backup JSON</button>
+                <input type="file" id="importLyricsJsonInput" accept=".json" class="hidden">
+                <button id="btnImportLyricsJson" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-xs px-2 py-1.5 rounded transition-colors border border-gray-600" onclick="document.getElementById('importLyricsJsonInput').click()"><i class="fa-solid fa-file-import"></i> Pulihkan</button>
             </div>
         </div>
     </div>
@@ -292,6 +325,7 @@
                 <select id="renderBitrateSelect" class="custom-select w-[80px] ml-1">
                     <option value="3000000">3.0 Mbps</option>
                     <option value="4000000">4.0 Mbps</option>
+                    <option value="5000000" selected>5.0 Mbps</option>
                     <option value="6000000">6.0 Mbps</option>
                     <option value="8000000">8.0 Mbps</option>
                     <option value="10000000">10.0 Mbps</option>
@@ -372,7 +406,7 @@
                 </div>
             </div>
 
-            <div class="panel">
+            <div class="panel" id="vizPanelContainer">
                 <div class="panel-header" title="Klik untuk Minimize/Maximize Panel">
                     <div class="flex items-center gap-1.5 pointer-events-none">
                         <i class="fa-solid fa-chevron-down text-[10px] opacity-80 panel-chevron transition-transform duration-300"></i>
@@ -1075,7 +1109,7 @@
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
             playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
             lyrics: { enabled: true, font: 'Inter', transform: 'capitalize', size: 36, posY: 150, delay: 0, colorBase: '#ffffff', colorActive: '#facc15', effect: 'shadow', animMode: 'scroll' },
-            render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 3000000, method: 'pisah' }
+            render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 5000000, method: 'pisah' }
         };
 
         let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null };
@@ -1430,6 +1464,186 @@
             } catch (e) {
                 statusTxt.textContent = "Gagal mencari lirik (Error)."; statusTxt.className = "text-[9px] text-red-500 font-bold";
             }
+        });
+
+        document.getElementById('btnSaveLocalLyrics').addEventListener('click', () => {
+            if (currentTrackIndex < 0 || !playlist[currentTrackIndex]) {
+                showNotification("Pilih lagu di playlist terlebih dahulu!"); return;
+            }
+            const rawLRC = document.getElementById('lrc-textarea').value;
+            if (!rawLRC) {
+                showNotification("Tidak ada lirik untuk disimpan!"); return;
+            }
+            const title = playlist[currentTrackIndex].file.name.replace(/\.[^/.]+$/, "").trim();
+            try {
+                localStorage.setItem('tnc7_lyrics_' + title, rawLRC);
+                showNotification("Lirik & Sync Time berhasil disimpan di aplikasi!");
+            } catch (e) {
+                showNotification("Gagal menyimpan lirik. Penyimpanan penuh?");
+            }
+        });
+
+        document.getElementById('btnExportLrcToPc').addEventListener('click', () => {
+            const rawLRC = document.getElementById('lrc-textarea').value;
+            if (!rawLRC) {
+                showNotification("Tidak ada lirik untuk disimpan!"); return;
+            }
+            
+            let filename = 'Lirik.lrc';
+            if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                filename = playlist[currentTrackIndex].file.name.replace(/\.[^/.]+$/, "").trim() + '.lrc';
+            }
+            
+            const blob = new Blob([rawLRC], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100);
+            
+            showNotification("Lirik berhasil diunduh ke PC!");
+        });
+
+        // Fitur Impor File LRC
+        document.getElementById('btn-import-lrc-file').addEventListener('click', () => {
+            document.getElementById('import-lrc-file-input').click();
+        });
+
+        document.getElementById('import-lrc-file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const text = ev.target.result;
+                lrcTextarea.value = text;
+                updateLrcHighlight();
+                showNotification("File LRC berhasil dimuat ke editor!");
+            };
+            reader.onerror = () => {
+                showNotification("Gagal membaca file LRC.");
+            };
+            reader.readAsText(file);
+            
+            // Reset input file agar bisa memilih file yang sama lagi jika diperlukan
+            e.target.value = '';
+        });
+
+        const lyricsManagerModal = document.getElementById('lyrics-manager-modal');
+        document.getElementById('btnOpenLyricsManager').addEventListener('click', () => {
+            renderLyricsList();
+            lyricsManagerModal.classList.remove('opacity-0', 'pointer-events-none');
+        });
+        
+        document.getElementById('close-lyrics-manager').addEventListener('click', () => {
+            lyricsManagerModal.classList.add('opacity-0', 'pointer-events-none');
+        });
+
+        function renderLyricsList() {
+            const container = document.getElementById('lyricsListContainer');
+            container.innerHTML = '';
+            
+            // Ambil semua kunci di localStorage yang merupakan lirik
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('tnc7_lyrics_'));
+            
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="text-xs text-gray-500 text-center mt-4">Belum ada lirik tersimpan.</div>';
+                return;
+            }
+            
+            keys.forEach(k => {
+                const title = k.replace('tnc7_lyrics_', '');
+                const el = document.createElement('div');
+                el.className = 'flex justify-between items-center bg-gray-800 p-1.5 rounded border border-gray-700 hover:border-green-500 transition-colors group';
+                
+                const span = document.createElement('span');
+                span.className = 'text-xs text-gray-300 font-bold truncate flex-1 cursor-pointer';
+                span.textContent = title;
+                span.title = title;
+                
+                // Event memuat lirik ke lagu yang sedang aktif
+                span.onclick = () => {
+                    if (currentTrackIndex < 0 || !playlist[currentTrackIndex]) {
+                        showNotification("Pilih atau putar lagu di playlist terlebih dahulu!");
+                        return;
+                    }
+                    const savedLRC = localStorage.getItem(k);
+                    playlist[currentTrackIndex].rawLRC = savedLRC;
+                    playlist[currentTrackIndex].lyrics = parseLRC(savedLRC);
+                    
+                    const lrcTextarea = document.getElementById('lrc-textarea');
+                    if (lrcTextarea) {
+                        lrcTextarea.value = savedLRC;
+                        if (typeof updateLrcHighlight === 'function') updateLrcHighlight();
+                    }
+                    
+                    if (typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive && typeof initLiveSync === 'function') {
+                        initLiveSync();
+                    }
+                    
+                    updateLyricsStatus();
+                    showNotification(`Lirik '${title}' berhasil dimuat!`);
+                    lyricsManagerModal.classList.add('opacity-0', 'pointer-events-none');
+                };
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity px-2';
+                delBtn.innerHTML = '<i class="fa-solid fa-trash text-xs"></i>';
+                delBtn.title = "Hapus Lirik";
+                
+                // Event menghapus lirik dari localStorage
+                delBtn.onclick = () => {
+                    if(confirm(`Hapus lirik tersimpan untuk:\n'${title}'?`)) {
+                        localStorage.removeItem(k);
+                        renderLyricsList();
+                    }
+                };
+                
+                el.appendChild(span);
+                el.appendChild(delBtn);
+                container.appendChild(el);
+            });
+        }
+
+        document.getElementById('btnExportLyricsJson').addEventListener('click', () => {
+            const keys = Object.keys(localStorage).filter(k => k.startsWith('tnc7_lyrics_'));
+            if (keys.length === 0) {
+                showNotification("Tidak ada lirik untuk di-backup!"); return;
+            }
+            const lyricsData = {};
+            keys.forEach(k => {
+                lyricsData[k] = localStorage.getItem(k);
+            });
+            
+            const jsonStr = JSON.stringify(lyricsData, null, 2);
+            const blob = new Blob([jsonStr], {type: "application/json"}); 
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = "TNC7_Lyrics_Backup.json"; document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); 
+            showNotification("Backup Lirik berhasil diekspor!");
+        });
+
+        document.getElementById('importLyricsJsonInput').addEventListener('change', (e) => {
+            const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const lData = JSON.parse(ev.target.result);
+                    let importedCount = 0;
+                    Object.keys(lData).forEach(k => {
+                        if (k.startsWith('tnc7_lyrics_')) {
+                            localStorage.setItem(k, lData[k]);
+                            importedCount++;
+                        }
+                    });
+                    renderLyricsList();
+                    showNotification(`${importedCount} Lirik berhasil dipulihkan dari JSON!`);
+                    e.target.value = '';
+                } catch (err) {
+                    showNotification("Gagal memuat file JSON lirik yang tidak valid.");
+                }
+            }; reader.readAsText(file);
         });
 
         const lrcModal = document.getElementById('lrc-modal');
@@ -3110,8 +3324,10 @@
             document.getElementById('vizTypeSelect').value = s.type;
             
             const panel = document.getElementById('vizPanelContainer');
-            if (tabId === 'viz2') { panel.classList.add('border-blue-900/50'); panel.classList.remove('border-gray-700'); } 
-            else { panel.classList.remove('border-blue-900/50'); panel.classList.add('border-gray-700'); }
+            if (panel) {
+                if (tabId === 'viz2') { panel.classList.add('border-blue-900/50'); panel.classList.remove('border-gray-700'); } 
+                else { panel.classList.remove('border-blue-900/50'); panel.classList.add('border-gray-700'); }
+            }
         }
 
         function updateWeatherUI() {
