@@ -72,14 +72,14 @@
             /* Removed flex-grow: 1 to prevent stretching when other panels are closed */
         }
 
-        .panel-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .panel-header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; gap: 8px; }
         .panel-header {
             font-size: 0.55rem; font-weight: 700; color: #ffffff; background-color: #dc2626;
             padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; text-transform: uppercase; 
             display: flex; /* Changed to flex for inner alignment */
             justify-content: space-between;
             align-items: center;
-            width: 100%; /* Stretch across panel */
+            flex: 1; /* Biarkan header mengambil ruang yang tersedia */
             cursor: pointer; /* Indicate it's clickable */
             user-select: none;
         }
@@ -1001,7 +1001,7 @@
             <div class="panel playlist-panel" id="playlistPanel">
                 <div class="panel-header-container">
                     <span class="panel-header">PLAYLIST AUDIO</span>
-                    <span id="playlistCount" class="text-xs font-normal">0 lagu</span>
+                    <span id="playlistCount" class="text-xs font-normal text-gray-300 whitespace-nowrap shrink-0">0 lagu</span>
                 </div>
                 <div id="playlistContainer" class="flex flex-col gap-1"></div>
             </div>
@@ -1009,7 +1009,7 @@
             <div class="panel playlist-panel" id="imgPlaylistPanel" style="display: none; max-height: 250px;">
                 <div class="panel-header-container">
                     <span class="panel-header">PLAYLIST BG</span>
-                    <span id="imgPlaylistCount" class="text-xs font-normal">0 item</span>
+                    <span id="imgPlaylistCount" class="text-xs font-normal text-gray-300 whitespace-nowrap shrink-0">0 item</span>
                 </div>
                 <div class="flex items-center gap-1 mb-2 bg-gray-800 p-1 rounded border border-gray-700 justify-between">
                     <label class="flex items-center gap-1.5 cursor-pointer flex-1">
