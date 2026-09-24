@@ -1009,6 +1009,105 @@
                 </div>
             </div>
 
+            <!-- Panel Progress Bar -->
+            <div class="panel">
+                <div class="panel-header" title="Klik untuk Minimize/Maximize Panel">
+                    <div class="flex items-center gap-1.5 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-[10px] opacity-80 panel-chevron transition-transform duration-300"></i>
+                        <span>PROGRESS BAR</span>
+                    </div>
+                    <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation();">
+                        <input type="checkbox" id="progressBarFxEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
+                        <span class="text-[9px] text-white font-bold uppercase">Tampilkan</span>
+                    </label>
+                </div>
+                <div class="panel-content mt-1">
+                    <div class="control-row">
+                        <span class="control-label text-[9px] w-10">Gaya</span>
+                        <div class="flex-1 flex gap-1" id="progressBarFxStyleGroup">
+                            <select class="custom-select flex-1" id="progressBarFxStyleSelect">
+                                <option value="outline">Outline (Bawaan)</option>
+                                <option value="solid">Solid (Blok)</option>
+                                <option value="line">Garis (Tipis)</option>
+                                <option value="neon">Neon Glow (Modern)</option>
+                                <option value="gradient">Gradient (Halus)</option>
+                                <option value="cyber">Cyber Block (Sci-Fi)</option>
+                                <option value="minimalist">Minimalist (Elegan)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="control-row mt-1">
+                        <span class="control-label text-[9px] w-10">Opsi</span>
+                        <div class="flex flex-1 gap-2 items-center flex-wrap">
+                            <label class="flex items-center gap-1 cursor-pointer text-[9px] text-gray-400">
+                                <input type="checkbox" id="progressBarFxShowTime" checked class="accent-yellow-400 w-3 h-3"> Waktu
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-[9px] text-gray-400">
+                                <input type="checkbox" id="progressBarFxShowTitle" checked class="accent-yellow-400 w-3 h-3"> Judul
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-[9px] text-gray-400">
+                                <input type="checkbox" id="progressBarFxShowControls" checked class="accent-yellow-400 w-3 h-3"> Kontrol
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="control-row mt-1">
+                        <span class="control-label text-[9px] w-10">Modern</span>
+                        <div class="flex flex-1 gap-2 items-center flex-wrap">
+                            <label class="flex items-center gap-1 cursor-pointer text-[9px] text-yellow-400 font-bold" title="Bar bereaksi membesar/mengecil mengikuti dentuman Bass">
+                                <input type="checkbox" id="progressBarFxReactive" class="accent-yellow-400 w-3 h-3"> ⚡ Reaktif
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-[9px] text-yellow-400 font-bold" title="Memunculkan percikan cahaya (sparks) di ujung indikator waktu">
+                                <input type="checkbox" id="progressBarFxParticles" class="accent-yellow-400 w-3 h-3"> ✨ Partikel
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="control-row mt-1">
+                        <span class="control-label text-[9px] w-10">Font</span>
+                        <div class="flex-1">
+                            <select class="custom-select" id="progressBarFxFontSelect">
+                                <option value="Inter">Inter (Modern)</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Poppins">Poppins</option>
+                                <option value="'Share Tech Mono', monospace">Share Tech (Mono)</option>
+                                <option value="Arial">Arial</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between w-full mt-1 border border-[#2a3142] rounded px-1 py-1">
+                        <span class="text-[9px] font-bold text-gray-500 tracking-wider">MODE WARNA</span>
+                        <div class="flex items-center gap-1" id="progressBarColorModeGroup">
+                            <button class="btn-custom btn-active" data-val="statis">Statis</button>
+                            <button class="btn-custom" data-val="auto">ARGB</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1 mt-1 w-full" id="progressBarStaticColorGroup">
+                        <span class="text-[9px] font-bold text-gray-500 w-10 tracking-wider uppercase">Warna</span>
+                        <div class="flex-1"><input type="color" id="progressBarFxColorPicker" value="#ffffff" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent"></div>
+                        <span class="text-[9px] font-bold text-gray-500 w-10 tracking-wider uppercase ml-1">Progres</span>
+                        <div class="flex-1"><input type="color" id="progressBarFxProgressColorPicker" value="#ffffff" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent"></div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 mt-1 w-full" id="progressBarArgbGroup" style="display: none;">
+                        <span class="text-[9px] font-bold text-gray-500 w-10 tracking-wider uppercase">Cepat</span>
+                        <div class="flex-1 flex items-center"><input type="range" min="1" max="100" value="15" id="progressBarArgbSpeedSlider"></div>
+                    </div>
+
+                    <div class="control-row mt-1">
+                        <span class="control-label text-[9px] w-8 font-bold tracking-wider uppercase">Lebar</span>
+                        <div class="flex-1"><input type="range" id="progressBarFxWidthSlider" min="10" max="100" value="80"></div>
+                    </div>
+                    <div class="control-row mt-1">
+                        <span class="control-label text-[9px] w-8 font-bold tracking-wider uppercase">Tebal</span>
+                        <div class="flex-1"><input type="range" id="progressBarFxThicknessSlider" min="1" max="20" value="4"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Panel Overlay Image -->
             <div class="panel">
                 <div class="panel-header" title="Klik untuk Minimize/Maximize Panel">
@@ -1171,12 +1270,13 @@
             overlay: { element: null, type: null, lapisan: 'depan', blend: 'normal', size: 0.5, opacity: 1, speed: 0.5, anim: 'none', offsetX: 0, offsetY: 0, animTime: 0, lastDrawTime: 0 },
             textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50 },
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
+            progressBarFx: { enabled: false, style: 'outline', showTime: true, showTitle: true, showControls: true, font: 'Inter', color: '#ffffff', progressColor: '#ffffff', width: 0.8, thickness: 4, offsetX: 0, offsetY: -100, reactive: false, particles: false, colorMode: 'statis', argbSpeed: 15 },
             playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
             lyrics: { enabled: true, font: 'Inter', transform: 'capitalize', size: 36, posY: 150, delay: 0, colorBase: '#ffffff', colorActive: '#facc15', effect: 'shadow', animMode: 'scroll', interludeFade: 0, syncSpeed: 1.0 },
             render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 5000000, method: 'pisah' }
         };
 
-        let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null };
+        let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null };
         let canvas = document.getElementById('previewCanvas');
         let ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
@@ -1316,6 +1416,8 @@
         bindButtonGroup('timeFormatGroup', 'timeFx', 'format'); bindButtonGroup('playlistAlignGroup', 'playlistFx', 'align');
         bindButtonGroup('playlistEffectGroup', 'playlistFx', 'effect'); bindButtonGroup('playlistBlinkModeGroup', 'playlistFx', 'blinkMode');
         
+        document.getElementById('progressBarFxStyleSelect').addEventListener('change', (e) => { state.progressBarFx.style = e.target.value; });
+        
         bindButtonGroup('lyricsTransformGroup', 'lyrics', 'transform'); bindButtonGroup('lyricsEffectGroup', 'lyrics', 'effect');
 
         document.getElementById('textColorModeGroup').querySelectorAll('button').forEach(btn => {
@@ -1362,6 +1464,32 @@
         document.getElementById('timeOpacitySlider').addEventListener('input', (e) => { state.timeFx.opacity = e.target.value / 100; });
         document.getElementById('timeColorPicker').addEventListener('input', (e) => { state.timeFx.color = e.target.value; });
         
+        // Event Listener untuk Progress Bar
+        document.getElementById('progressBarFxEnable').addEventListener('change', (e) => { state.progressBarFx.enabled = e.target.checked; });
+        document.getElementById('progressBarFxShowTime').addEventListener('change', (e) => { state.progressBarFx.showTime = e.target.checked; });
+        document.getElementById('progressBarFxShowTitle').addEventListener('change', (e) => { state.progressBarFx.showTitle = e.target.checked; });
+        document.getElementById('progressBarFxShowControls').addEventListener('change', (e) => { state.progressBarFx.showControls = e.target.checked; });
+        
+        // Fitur Progress Bar Baru
+        document.getElementById('progressBarFxReactive').addEventListener('change', (e) => { state.progressBarFx.reactive = e.target.checked; });
+        document.getElementById('progressBarFxParticles').addEventListener('change', (e) => { state.progressBarFx.particles = e.target.checked; });
+        
+        bindButtonGroup('progressBarColorModeGroup', 'progressBarFx', 'colorMode');
+        document.getElementById('progressBarColorModeGroup').querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.getAttribute('data-val');
+                if (mode === 'auto') { document.getElementById('progressBarStaticColorGroup').style.display = 'none'; document.getElementById('progressBarArgbGroup').style.display = 'flex'; } 
+                else if (mode === 'statis') { document.getElementById('progressBarStaticColorGroup').style.display = 'flex'; document.getElementById('progressBarArgbGroup').style.display = 'none'; }
+            });
+        });
+        document.getElementById('progressBarArgbSpeedSlider').addEventListener('input', (e) => { state.progressBarFx.argbSpeed = parseFloat(e.target.value); });
+
+        document.getElementById('progressBarFxFontSelect').addEventListener('change', (e) => { state.progressBarFx.font = e.target.value; });
+        document.getElementById('progressBarFxColorPicker').addEventListener('input', (e) => { state.progressBarFx.color = e.target.value; });
+        document.getElementById('progressBarFxProgressColorPicker').addEventListener('input', (e) => { state.progressBarFx.progressColor = e.target.value; });
+        document.getElementById('progressBarFxWidthSlider').addEventListener('input', (e) => { state.progressBarFx.width = e.target.value / 100; });
+        document.getElementById('progressBarFxThicknessSlider').addEventListener('input', (e) => { state.progressBarFx.thickness = parseInt(e.target.value); });
+
         document.getElementById('playlistFxEnable').addEventListener('change', (e) => { state.playlistFx.enabled = e.target.checked; });
         document.getElementById('playlistFontSelect').addEventListener('change', (e) => { state.playlistFx.font = e.target.value; });
         document.getElementById('btnPlaylistBold').addEventListener('click', (e) => { state.playlistFx.bold = !state.playlistFx.bold; e.target.classList.toggle('btn-active'); });
@@ -1438,7 +1566,7 @@
         document.getElementById('slideshowIntervalInput').addEventListener('change', (e) => { state.bg.slideshowInterval = parseInt(e.target.value) || 10; });
 
         let audioContext; let audioSource; let realtimeAnalyser; let analyser; let dataArray; let isPlaying = false; let smoothedKick = 0;
-        let snowflakes = []; let raindrops = []; let goldDrops = []; let lightnings = []; let smokes = []; let PI2 = Math.PI * 2;
+        let snowflakes = []; let raindrops = []; let goldDrops = []; let lightnings = []; let smokes = []; let progressBarSparks = []; let PI2 = Math.PI * 2;
         let playlist = []; let currentTrackIndex = -1; let typewriterProgress = 0; let lastTrackForText = ""; let textTransitionStart = 0;
 
         function hexToRgb(hex) {
@@ -2403,7 +2531,7 @@
         }
 
         function forceGarbageCollection() {
-            snowflakes = []; raindrops = []; goldDrops = []; lightnings = []; smokes = []; window.plexusNodes = null; window.cyberCaps = null; smoothedKick = 0;
+            snowflakes = []; raindrops = []; goldDrops = []; lightnings = []; smokes = []; progressBarSparks = []; window.plexusNodes = null; window.cyberCaps = null; smoothedKick = 0;
             if (canvas) { canvas.width = state.render.res === 1080 ? 1920 : 1280; canvas.height = state.render.res === 1080 ? 1080 : 720; }
         }
 
@@ -2778,7 +2906,7 @@
             const w = 1280; const h = 720; const cx = w / 2; const cy = h / 2;
             
             ctx.fillStyle = state.bg.color || '#0f1115'; ctx.fillRect(0, 0, w, h);
-            bboxes.viz = null; bboxes.overlay = null; bboxes.text = null; bboxes.time = null; bboxes.playlist = null; bboxes.lyrics = null;
+            bboxes.viz = null; bboxes.overlay = null; bboxes.text = null; bboxes.time = null; bboxes.playlist = null; bboxes.lyrics = null; bboxes.progressBar = null;
             
             let audioReactivity = 0; let bgAudioReactivity = 0; let kickBassReactivity = 0; 
             if(dataArray) {
@@ -3177,6 +3305,213 @@
                 ctx.font = `bold ${fontSize}px ${state.timeFx.font}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(0, 0, 0, 0.7)'; ctx.shadowBlur = 4; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
                 ctx.globalAlpha = state.timeFx.opacity !== undefined ? state.timeFx.opacity : 1.0; ctx.fillStyle = state.timeFx.color; ctx.fillText(timeString, textX, textY);
                 let metrics = ctx.measureText(timeString); let textW = metrics.width; let textH = fontSize; bboxes.time = { x: textX - (textW / 2), y: textY - (textH / 2), w: textW, h: textH }; ctx.restore();
+            }
+
+            if (state.progressBarFx.enabled && (audioElement.src || isOfflineRendering)) {
+                ctx.save();
+                let curTime = isOfflineRendering ? window.offlineCurrentTime : audioElement.currentTime;
+                let dur = audioElement.duration || (isOfflineRendering ? 100 : 1);
+                if (isNaN(dur) || dur === 0) dur = 1;
+                let progress = Math.max(0, Math.min(1, curTime / dur));
+
+                let barW = w * state.progressBarFx.width;
+                let barH = state.progressBarFx.thickness * (h / 720);
+                let barX = cx - (barW / 2) + (state.progressBarFx.offsetX || 0);
+                let barY = h - (50 * (h / 720)) + (state.progressBarFx.offsetY || 0);
+                
+                // Efek Reaktif
+                if (state.progressBarFx.reactive && audioReactivity !== undefined) {
+                    let bump = kickBassReactivity * 0.5;
+                    barW *= (1 + bump * 0.05);
+                    barH *= (1 + bump);
+                    barX = cx - (barW / 2) + (state.progressBarFx.offsetX || 0);
+                }
+
+                // Mode Warna RGB / Statis
+                let baseColor = state.progressBarFx.color;
+                let progColor = state.progressBarFx.progressColor;
+                if (state.progressBarFx.colorMode === 'auto') {
+                    let timeRgb = getRenderTime();
+                    let hue1 = (timeRgb * (state.progressBarFx.argbSpeed || 15)) % 360;
+                    let hue2 = (hue1 + 40) % 360;
+                    baseColor = `rgba(255, 255, 255, 0.2)`;
+                    progColor = `hsl(${hue1}, 100%, 50%)`;
+                }
+                
+                let titleFontSize = Math.max(14, 18 * (h / 720));
+                let padBottom = 8 * (h/720);
+
+                // Menggambar Teks Judul Lagu di Tengah Atas Bar
+                if (state.progressBarFx.showTitle) {
+                    let currentTrackName = "Unknown Track";
+                    if (currentTrackIndex >= 0 && currentTrackIndex < playlist.length) {
+                        currentTrackName = playlist[currentTrackIndex].file.name.replace(/\.[^/.]+$/, "");
+                    }
+                    
+                    ctx.font = `bold ${titleFontSize}px ${state.progressBarFx.font}, sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillStyle = state.progressBarFx.colorMode === 'auto' ? `hsl(${((getRenderTime() * (state.progressBarFx.argbSpeed || 15)) + 180) % 360}, 100%, 70%)` : state.progressBarFx.color;
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                    ctx.shadowBlur = 4;
+                    ctx.shadowOffsetX = 1;
+                    ctx.shadowOffsetY = 1;
+                    
+                    ctx.fillText(currentTrackName, cx + (state.progressBarFx.offsetX || 0), barY - padBottom);
+                }
+
+                // Area Bounding Box untuk Drag & Drop
+                let touchPadding = 20;
+                let extraHeight = titleFontSize + padBottom + 25; 
+                bboxes.progressBar = { x: barX, y: barY - titleFontSize - padBottom - touchPadding, w: barW, h: barH + extraHeight + (touchPadding*2) };
+
+                // Menggambar Waktu
+                if (state.progressBarFx.showTime) {
+                    let fontSize = Math.max(12, 16 * (h / 720));
+                    ctx.font = `bold ${fontSize}px ${state.progressBarFx.font}, sans-serif`;
+                    ctx.fillStyle = state.progressBarFx.colorMode === 'auto' ? '#ffffff' : state.progressBarFx.color;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
+                    
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                    ctx.shadowBlur = 4;
+                    ctx.shadowOffsetX = 1;
+                    ctx.shadowOffsetY = 1;
+
+                    let curTimeStr = formatTime(curTime);
+                    let durStr = formatTime(dur);
+                    
+                    ctx.fillText(curTimeStr, barX, barY - padBottom);
+                    ctx.textAlign = 'right';
+                    ctx.fillText(durStr, barX + barW, barY - padBottom);
+                }
+
+                ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
+                let handleW = barH * 2.5; let handleH = barH * 2.5;
+                let fillW = barW * progress;
+                let hx = barX + fillW; 
+                let hy = barY + (barH/2);
+
+                // Menggambar Style Bar
+                if (state.progressBarFx.style === 'outline') {
+                    ctx.strokeStyle = baseColor;
+                    ctx.lineWidth = Math.max(1, barH * 0.3);
+                    ctx.strokeRect(barX, barY, barW, barH);
+                    
+                    ctx.fillStyle = progColor;
+                    ctx.fillRect(barX, barY, fillW, barH);
+
+                    ctx.fillStyle = '#ffffff'; 
+                    let drawHx = hx - (handleW/2);
+                    if (drawHx < barX) drawHx = barX; 
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4;
+                    ctx.fillRect(drawHx, barY - (handleH/2) + (barH/2), handleW, handleH);
+
+                } else if (state.progressBarFx.style === 'solid') {
+                    ctx.fillStyle = baseColor === 'rgba(255, 255, 255, 0.2)' ? baseColor : 'rgba(255, 255, 255, 0.2)';
+                    ctx.fillRect(barX, barY, barW, barH);
+                    
+                    ctx.fillStyle = progColor;
+                    ctx.fillRect(barX, barY, fillW, barH);
+                    
+                    ctx.beginPath(); ctx.arc(hx, hy, barH * 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4; ctx.fill();
+
+                } else if (state.progressBarFx.style === 'line') {
+                    ctx.fillStyle = baseColor === 'rgba(255, 255, 255, 0.2)' ? baseColor : 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(barX, barY, barW, 2);
+                    
+                    ctx.fillStyle = progColor;
+                    ctx.fillRect(barX, barY - (barH/2) + 1, fillW, barH);
+                    
+                } else if (state.progressBarFx.style === 'neon') {
+                    ctx.shadowColor = baseColor; ctx.shadowBlur = 15;
+                    ctx.strokeStyle = baseColor; ctx.lineWidth = Math.max(1, barH * 0.3);
+                    ctx.strokeRect(barX, barY, barW, barH);
+                    
+                    ctx.shadowColor = progColor; ctx.shadowBlur = 20;
+                    if(state.progressBarFx.reactive && kickBassReactivity > 0.4) ctx.shadowBlur = 20 + (kickBassReactivity * 30);
+                    ctx.fillStyle = progColor; ctx.fillRect(barX, barY, fillW, barH);
+                    
+                    ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(hx, hy, barH * 1.5, 0, Math.PI * 2); ctx.fill();
+                    
+                } else if (state.progressBarFx.style === 'gradient') {
+                    ctx.fillStyle = baseColor === 'rgba(255, 255, 255, 0.2)' ? baseColor : 'rgba(255, 255, 255, 0.1)';
+                    ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, barH/2); ctx.fill();
+                    
+                    if (progress > 0) {
+                        let grad = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
+                        grad.addColorStop(0, state.progressBarFx.colorMode === 'auto' ? `hsl(${((getRenderTime() * (state.progressBarFx.argbSpeed || 15)) - 40) % 360}, 100%, 50%)` : baseColor);
+                        grad.addColorStop(1, progColor);
+                        ctx.fillStyle = grad;
+                        ctx.beginPath(); ctx.roundRect(barX, barY, fillW, barH, barH/2); ctx.fill();
+                    }
+                } else if (state.progressBarFx.style === 'cyber') {
+                    let segments = 40; let segW = (barW / segments) - 2;
+                    for(let i=0; i<segments; i++) {
+                        let sx = barX + (i * (barW/segments));
+                        if (i/segments <= progress) {
+                            ctx.fillStyle = state.progressBarFx.colorMode === 'auto' ? `hsl(${((getRenderTime() * (state.progressBarFx.argbSpeed || 15)) + i*2) % 360}, 100%, 50%)` : progColor;
+                            ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 5;
+                        } else {
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; ctx.shadowBlur = 0;
+                        }
+                        ctx.beginPath(); ctx.moveTo(sx + (barH*0.5), barY); ctx.lineTo(sx + segW + (barH*0.5), barY); ctx.lineTo(sx + segW, barY + barH); ctx.lineTo(sx, barY + barH); ctx.fill();
+                    }
+                } else if (state.progressBarFx.style === 'minimalist') {
+                    ctx.fillStyle = baseColor === 'rgba(255, 255, 255, 0.2)' ? baseColor : 'rgba(255, 255, 255, 0.2)';
+                    ctx.fillRect(barX, barY + barH/2 - 1, barW, 2);
+                    
+                    ctx.fillStyle = progColor;
+                    ctx.fillRect(barX, barY + barH/2 - 1.5, fillW, 3);
+                    
+                    ctx.fillStyle = state.progressBarFx.colorMode === 'auto' ? '#ffffff' : baseColor;
+                    ctx.beginPath(); ctx.arc(hx, hy, barH, 0, Math.PI * 2); ctx.fill();
+                }
+
+                // Efek Partikel Ekor di ujung bar (jika aktif)
+                if (state.progressBarFx.particles && isPlaying && progress > 0 && progress < 1) {
+                    ctx.shadowBlur = 0;
+                    if (Math.random() > 0.5) {
+                        progressBarSparks.push({
+                            x: hx, y: hy, vx: (Math.random() * -2) - 1, vy: (Math.random() - 0.5) * 3,
+                            life: 1.0, color: state.progressBarFx.colorMode === 'auto' ? progColor : state.progressBarFx.progressColor, size: Math.random() * 2 + 1
+                        });
+                    }
+                    for (let i = progressBarSparks.length - 1; i >= 0; i--) {
+                        let p = progressBarSparks[i];
+                        p.x += p.vx; p.y += p.vy; p.life -= 0.05; p.size *= 0.95;
+                        if (p.life <= 0) { progressBarSparks.splice(i, 1); } 
+                        else {
+                            ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                            ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.1, p.size), 0, Math.PI * 2); ctx.fill();
+                        }
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
+
+                // Menggambar Kontrol Media (Prev, Play/Pause, Next)
+                if (state.progressBarFx.showControls) {
+                    let controlsY = barY + barH + (18 * (h/720));
+                    let iconSize = 8 * (h/720);
+                    let spacing = 45 * (w/1280);
+                    let centerControlsX = cx + (state.progressBarFx.offsetX || 0);
+                    
+                    ctx.fillStyle = state.progressBarFx.colorMode === 'auto' ? '#ffffff' : state.progressBarFx.color;
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 4;
+                    
+                    const drawPlay = (x, y, size) => { ctx.beginPath(); ctx.moveTo(x - size*0.5, y - size); ctx.lineTo(x + size*0.8, y); ctx.lineTo(x - size*0.5, y + size); ctx.closePath(); ctx.fill(); };
+                    const drawPause = (x, y, size) => { let w = size * 0.4; ctx.fillRect(x - w*1.5, y - size, w, size * 2); ctx.fillRect(x + w*0.5, y - size, w, size * 2); };
+                    const drawNext = (x, y, size) => { ctx.beginPath(); ctx.moveTo(x - size, y - size); ctx.lineTo(x + size*0.4, y); ctx.lineTo(x - size, y + size); ctx.closePath(); ctx.fill(); ctx.fillRect(x + size*0.4, y - size, size * 0.4, size * 2); };
+                    const drawPrev = (x, y, size) => { ctx.beginPath(); ctx.moveTo(x + size, y - size); ctx.lineTo(x - size*0.4, y); ctx.lineTo(x + size, y + size); ctx.closePath(); ctx.fill(); ctx.fillRect(x - size - (size*0.4), y - size, size * 0.4, size * 2); };
+                    
+                    drawPrev(centerControlsX - spacing, controlsY, iconSize);
+                    if (isPlaying) { drawPause(centerControlsX, controlsY, iconSize); } else { drawPlay(centerControlsX, controlsY, iconSize); }
+                    drawNext(centerControlsX + spacing, controlsY, iconSize);
+                }
+                ctx.restore();
             }
 
             if (state.playlistFx.enabled && playlist.length > 0) {
@@ -3693,6 +4028,23 @@
             setVal('overlaySize', state.overlay.size * 100); setVal('overlayOpacity', state.overlay.opacity * 100); setVal('overlaySpeed', state.overlay.speed * 100); setBtn('overlayBlendGroup', state.overlay.blend); setBtn('overlayAnimGroup', state.overlay.anim);
             setCheck('textEnable', state.textFx.enabled); setVal('textCustomInput', state.textFx.customText); setVal('textFontSelect', state.textFx.font); setBtn('textColorModeGroup', state.textFx.colorMode); setVal('textColorPicker', state.textFx.color); setVal('textArgbSpeedSlider', state.textFx.argbSpeed); setVal('textSizeSlider', state.textFx.size); setBtn('textAlignGroup', state.textFx.align); setBtn('textEffectGroup', state.textFx.effect); setVal('textIntensitySlider', state.textFx.intensity); setBtn('textAnimGroup', state.textFx.anim); setVal('textAnimSpeedSlider', state.textFx.animSpeed);
             setCheck('timeEnable', state.timeFx.enabled); setBtn('timeFormatGroup', state.timeFx.format); setVal('timeFontSelect', state.timeFx.font); setVal('timeColorPicker', state.timeFx.color); setVal('timeSizeSlider', state.timeFx.size); setVal('timeOpacitySlider', state.timeFx.opacity * 100);
+            
+            setCheck('progressBarFxEnable', state.progressBarFx.enabled); setVal('progressBarFxStyleSelect', state.progressBarFx.style); setCheck('progressBarFxShowTime', state.progressBarFx.showTime); setCheck('progressBarFxShowTitle', state.progressBarFx.showTitle); setCheck('progressBarFxShowControls', state.progressBarFx.showControls); setVal('progressBarFxFontSelect', state.progressBarFx.font); setVal('progressBarFxColorPicker', state.progressBarFx.color); setVal('progressBarFxProgressColorPicker', state.progressBarFx.progressColor); setVal('progressBarFxWidthSlider', state.progressBarFx.width * 100); setVal('progressBarFxThicknessSlider', state.progressBarFx.thickness);
+            
+            // Binding UI Progress Bar Modern
+            setCheck('progressBarFxReactive', state.progressBarFx.reactive);
+            setCheck('progressBarFxParticles', state.progressBarFx.particles);
+            setBtn('progressBarColorModeGroup', state.progressBarFx.colorMode);
+            setVal('progressBarArgbSpeedSlider', state.progressBarFx.argbSpeed);
+
+            if (state.progressBarFx.colorMode === 'auto') {
+                document.getElementById('progressBarStaticColorGroup').style.display = 'none';
+                document.getElementById('progressBarArgbGroup').style.display = 'flex';
+            } else {
+                document.getElementById('progressBarStaticColorGroup').style.display = 'flex';
+                document.getElementById('progressBarArgbGroup').style.display = 'none';
+            }
+
             setCheck('playlistFxEnable', state.playlistFx.enabled); setVal('playlistFontSelect', state.playlistFx.font); setVal('playlistSizeSlider', state.playlistFx.size); setVal('playlistFxIntensitySlider', (state.playlistFx.fxIntensity !== undefined ? state.playlistFx.fxIntensity : 0.5) * 100); setVal('playlistScaleWidthSlider', state.playlistFx.scaleWidth * 100); setVal('playlistScaleHeightSlider', state.playlistFx.scaleHeight * 100); setVal('playlistColorPicker', state.playlistFx.color); setVal('playlistActiveColorPicker', state.playlistFx.activeColor); setVal('playlistBlinkSlider', state.playlistFx.blinkIntensity); setBtn('playlistAlignGroup', state.playlistFx.align); setVal('playlistTransformGroup', state.playlistFx.transform); setBtn('playlistEffectGroup', state.playlistFx.effect); setBtn('playlistBlinkModeGroup', state.playlistFx.blinkMode); setVal('playlistIconSelect', state.playlistFx.icon); setVal('playlistIconColorPicker', state.playlistFx.iconColor || '#dc2626'); setVal('playlistMaskColorPicker', state.playlistFx.maskColor || '#000000'); setVal('playlistMaskPrecisionSlider', (state.playlistFx.maskPrecision !== undefined ? state.playlistFx.maskPrecision : 1.0) * 100);
             setCheck('playlistUpNextEnable', state.playlistFx.upNextToast);
             
@@ -3728,6 +4080,7 @@
             const pos = getCanvasMousePos(e); let clicked = null;
             if (state.textFx.enabled && bboxes.text) { const padding = 10; if (pos.x >= bboxes.text.x - padding && pos.x <= bboxes.text.x + bboxes.text.w + padding && pos.y >= bboxes.text.y - padding && pos.y <= bboxes.text.y + bboxes.text.h + padding) { clicked = 'text'; } }
             if (!clicked && state.timeFx.enabled && bboxes.time) { const padding = 10; if (pos.x >= bboxes.time.x - padding && pos.x <= bboxes.time.x + bboxes.time.w + padding && pos.y >= bboxes.time.y - padding && pos.y <= bboxes.time.y + bboxes.time.h + padding) { clicked = 'time'; } }
+            if (!clicked && state.progressBarFx.enabled && bboxes.progressBar) { if (pos.x >= bboxes.progressBar.x && pos.x <= bboxes.progressBar.x + bboxes.progressBar.w && pos.y >= bboxes.progressBar.y && pos.y <= bboxes.progressBar.y + bboxes.progressBar.h) { clicked = 'progressBar'; } }
             if (!clicked && state.playlistFx.enabled && bboxes.playlist) { const padding = 10; if (pos.x >= bboxes.playlist.x - padding && pos.x <= bboxes.playlist.x + bboxes.playlist.w + padding && pos.y >= bboxes.playlist.y - padding && pos.y <= bboxes.playlist.y + bboxes.playlist.h + padding) { clicked = 'playlist'; } }
             if (!clicked && state.lyrics.enabled && bboxes.lyrics) { const padding = 10; if (pos.x >= bboxes.lyrics.x - padding && pos.x <= bboxes.lyrics.x + bboxes.lyrics.w + padding && pos.y >= bboxes.lyrics.y - padding && pos.y <= bboxes.lyrics.y + bboxes.lyrics.h + padding) { clicked = 'lyrics'; } }
             if (!clicked && state.overlay.element && (state.overlay.lapisan === 'depan' || state.overlay.lapisan === 'kunci')) { if (bboxes.overlay && pos.x >= bboxes.overlay.x && pos.x <= bboxes.overlay.x + bboxes.overlay.w && pos.y >= bboxes.overlay.y && pos.y <= bboxes.overlay.y + bboxes.overlay.h) { clicked = 'overlay'; } }
@@ -3742,6 +4095,7 @@
                 else if (clicked === 'overlay') { initialOffsetX = state.overlay.offsetX || 0; initialOffsetY = state.overlay.offsetY || 0; } 
                 else if (clicked === 'text') { initialOffsetX = state.textFx.offsetX || 0; initialOffsetY = state.textFx.offsetY || 0; }
                 else if (clicked === 'time') { initialOffsetX = state.timeFx.offsetX || 0; initialOffsetY = state.timeFx.offsetY || 0; }
+                else if (clicked === 'progressBar') { initialOffsetX = state.progressBarFx.offsetX || 0; initialOffsetY = state.progressBarFx.offsetY || 0; }
                 else if (clicked === 'playlist') { initialOffsetX = state.playlistFx.offsetX || 0; initialOffsetY = state.playlistFx.offsetY || 0; }
                 else if (clicked === 'lyrics') { initialOffsetX = state.lyrics.offsetX || 0; initialOffsetY = state.lyrics.posY; }
                 canvas.style.cursor = 'grabbing';
@@ -3756,6 +4110,7 @@
             else if (draggingElement === 'overlay') { state.overlay.offsetX = initialOffsetX + dx; state.overlay.offsetY = initialOffsetY + dy; } 
             else if (draggingElement === 'text') { state.textFx.offsetX = initialOffsetX + dx; state.textFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'time') { state.timeFx.offsetX = initialOffsetX + dx; state.timeFx.offsetY = initialOffsetY + dy; }
+            else if (draggingElement === 'progressBar') { state.progressBarFx.offsetX = initialOffsetX + dx; state.progressBarFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'playlist') { state.playlistFx.offsetX = initialOffsetX + dx; state.playlistFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'lyrics') { state.lyrics.offsetX = initialOffsetX + dx; state.lyrics.posY = initialOffsetY + dy; updateUIFromState(); }
         }
@@ -3863,6 +4218,7 @@
                         if (state.textFx && state.textFx.enabled) score += 5;
                         
                         if (state.timeFx && state.timeFx.enabled) score += 5;
+                        if (state.progressBarFx && state.progressBarFx.enabled) score += 5;
                         if (state.playlistFx && state.playlistFx.enabled) score += 5;
                         if (state.lyrics && state.lyrics.enabled && currentTrackIndex >= 0 && playlist[currentTrackIndex] && playlist[currentTrackIndex].lyrics && playlist[currentTrackIndex].lyrics.length > 0) score += 15;
                     }
