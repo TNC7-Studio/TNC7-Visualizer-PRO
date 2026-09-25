@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tnc7-pro-cache-v22';
+const CACHE_NAME = 'tnc7-pro-cache-v23';
 const urlsToCache = [
     './',
     './index.html',
