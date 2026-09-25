@@ -460,11 +460,18 @@
                 
                 <div class="panel-content mt-1">
                     <!-- UPDATE: Fitur Crossfade Gambar Latar -->
-                    <div class="flex items-center gap-1 bg-gray-800/50 p-1 rounded border border-gray-700">
-                        <label class="flex items-center gap-1 cursor-pointer flex-1">
+                    <div class="flex flex-col gap-1 bg-gray-800/50 p-1 rounded border border-gray-700">
+                        <label class="flex items-center gap-1 cursor-pointer w-full">
                             <input type="checkbox" id="bgCrossfadeEnable" checked class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
                             <span class="text-[9px] text-gray-300 font-bold uppercase tracking-wider">Transisi Halus (Crossfade)</span>
                         </label>
+                        <div class="flex items-center gap-1 w-full pl-3" id="bgCrossfadeDurGroup">
+                            <span class="text-[9px] text-gray-400 w-8">Durasi</span>
+                            <div class="flex-1 flex items-center">
+                                <input type="range" id="bgCrossfadeDurationSlider" data-no-indicator="true" min="1" max="100" value="10">
+                                <span class="text-[9px] text-gray-400 ml-1 w-6 text-right shrink-0 font-medium" id="bgCrossfadeDurationDisplay">1.0s</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-1 mt-1">
@@ -587,11 +594,17 @@
                 
                 <div class="panel-content mt-1">
                     <!-- UPDATE: Sistem Partikel Reaktif Audio -->
-                    <div class="flex items-center gap-1 mb-1 bg-gray-800/50 p-1 rounded border border-gray-700">
-                        <label class="flex items-center gap-1 cursor-pointer flex-1">
+                    <div class="flex flex-col gap-1 mb-1 bg-gray-800/50 p-1 rounded border border-gray-700">
+                        <label class="flex items-center gap-1 cursor-pointer w-full">
                             <input type="checkbox" id="weatherReactiveEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-2 w-2">
                             <span class="text-[9px] text-yellow-400 font-bold uppercase tracking-wider">⚡ Partikel Reaktif Audio</span>
                         </label>
+                        <div class="flex items-center gap-1 w-full pl-3" id="weatherReactiveIntensityGroup" style="display: none;">
+                            <span class="text-[9px] text-gray-400 w-10">Sensitivitas</span>
+                            <div class="flex-1 flex items-center">
+                                <input type="range" id="weatherReactiveIntensitySlider" min="1" max="200" value="50">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-1">
@@ -1267,7 +1280,7 @@
         const state = {
             viz: { enabled: true, align: 'full', size: 0.5, width: 0.5, opacity: 1.0, type: 'modern_cyber_bars', offsetX: 0, offsetY: 0, colorMode: 'auto', staticColor: '#facc15', argbSpeed: 15 },
             viz2: { enabled: false, align: 'full', size: 0.3, width: 0.5, opacity: 1.0, type: 'wave_double', offsetX: 0, offsetY: -150, colorMode: 'auto', staticColor: '#3b82f6', argbSpeed: 20 },
-            bg: { color: '#0f1115', image: null, imgElement: null, effect: 'normal', weather: ['normal'], weatherProps: { salju: {intensity: 50, speed: 50}, hujan_emas: {intensity: 50, speed: 50}, hujan_air: {intensity: 50, speed: 50}, petir: {intensity: 50, speed: 50}, asap_warna: {intensity: 50, speed: 50, color: '#a0aec0'} }, darkness: 0, pulseIntensity: 0.50, scale: 1.0, snowIntensity: 50, weatherSpeed: 50, mirror: false, autoSlideshow: false, slideshowInterval: 10, beatDropFx: false, crossfade: true, weatherReactive: false },
+            bg: { color: '#0f1115', image: null, imgElement: null, effect: 'normal', weather: ['normal'], weatherProps: { salju: {intensity: 50, speed: 50}, hujan_emas: {intensity: 50, speed: 50}, hujan_air: {intensity: 50, speed: 50}, petir: {intensity: 50, speed: 50}, asap_warna: {intensity: 50, speed: 50, color: '#a0aec0'} }, darkness: 0, pulseIntensity: 0.50, scale: 1.0, snowIntensity: 50, weatherSpeed: 50, mirror: false, autoSlideshow: false, slideshowInterval: 10, beatDropFx: false, crossfade: true, crossfadeDuration: 1.0, weatherReactive: false, weatherReactiveIntensity: 50 },
             overlay: { element: null, type: null, lapisan: 'depan', blend: 'normal', size: 0.5, opacity: 1, speed: 0.5, anim: 'none', offsetX: 0, offsetY: 0, animTime: 0, lastDrawTime: 0 },
             textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50 },
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
@@ -1557,8 +1570,22 @@
         document.getElementById('btnHapusOverlay').addEventListener('click', () => { state.overlay.element = null; document.getElementById('overlayNameDisplay').textContent = "Belum ada"; });
 
         document.getElementById('bgMirrorEnable').addEventListener('change', (e) => { state.bg.mirror = e.target.checked; });
-        document.getElementById('bgCrossfadeEnable').addEventListener('change', (e) => { state.bg.crossfade = e.target.checked; });
-        document.getElementById('weatherReactiveEnable').addEventListener('change', (e) => { state.bg.weatherReactive = e.target.checked; });
+        document.getElementById('bgCrossfadeEnable').addEventListener('change', (e) => { 
+            state.bg.crossfade = e.target.checked; 
+            document.getElementById('bgCrossfadeDurGroup').style.display = e.target.checked ? 'flex' : 'none';
+        });
+        document.getElementById('bgCrossfadeDurationSlider').addEventListener('input', (e) => { 
+            state.bg.crossfadeDuration = parseFloat(e.target.value) / 10;
+            document.getElementById('bgCrossfadeDurationDisplay').textContent = state.bg.crossfadeDuration.toFixed(1) + 's';
+        });
+        document.getElementById('weatherReactiveEnable').addEventListener('change', (e) => { 
+            state.bg.weatherReactive = e.target.checked; 
+            const group = document.getElementById('weatherReactiveIntensityGroup');
+            if (group) group.style.display = e.target.checked ? 'flex' : 'none';
+        });
+        document.getElementById('weatherReactiveIntensitySlider').addEventListener('input', (e) => {
+            state.bg.weatherReactiveIntensity = parseInt(e.target.value);
+        });
         document.getElementById('beatDropFxEnable').addEventListener('change', (e) => { state.bg.beatDropFx = e.target.checked; });
         document.getElementById('bgDarknessSlider').addEventListener('input', (e) => { state.bg.darkness = e.target.value / 100; });
         document.getElementById('bgScaleSlider').addEventListener('input', (e) => { state.bg.scale = e.target.value / 100; });
@@ -2925,7 +2952,7 @@
             let globalAlphaBG = 1.0; let prevGlobalAlphaBG = 0.0;
             if (isBgCrossfading && state.bg.crossfade) {
                 let elapsed = getRenderTime() - bgCrossfadeStartTime;
-                let duration = 1.0; // Durasi transisi 1 detik
+                let duration = state.bg.crossfadeDuration !== undefined ? state.bg.crossfadeDuration : 1.0; // Durasi transisi dinamis
                 if (elapsed < duration) {
                     globalAlphaBG = elapsed / duration;
                     prevGlobalAlphaBG = 1.0 - (elapsed / duration);
@@ -2987,7 +3014,8 @@
                 else { int = state.bg.snowIntensity || 50; spd = state.bg.weatherSpeed || 50; }
                 let activeInt = int; let finalSpd = (spd / 50) * 2;
                 if (state.bg.weatherReactive && kickBassReactivity > 0.4) {
-                    let boost = (kickBassReactivity - 0.4) * 2;
+                    let intensityMult = (state.bg.weatherReactiveIntensity !== undefined ? state.bg.weatherReactiveIntensity : 50) / 50;
+                    let boost = (kickBassReactivity - 0.4) * 2 * intensityMult;
                     activeInt = int + (boost * ((int / 50) * 150));
                     finalSpd = finalSpd * (1 + boost * ((spd / 50) * 2.5));
                 }
@@ -4024,7 +4052,17 @@
             
             // Binding UI Baru
             setCheck('bgCrossfadeEnable', state.bg.crossfade);
+            const crossfadeDurGroup = document.getElementById('bgCrossfadeDurGroup');
+            if(crossfadeDurGroup) crossfadeDurGroup.style.display = state.bg.crossfade ? 'flex' : 'none';
+            setVal('bgCrossfadeDurationSlider', (state.bg.crossfadeDuration || 1.0) * 10);
+            if(document.getElementById('bgCrossfadeDurationDisplay')) document.getElementById('bgCrossfadeDurationDisplay').textContent = (state.bg.crossfadeDuration || 1.0).toFixed(1) + 's';
+
             setCheck('weatherReactiveEnable', state.bg.weatherReactive);
+            const weatherReactiveIntensityGroup = document.getElementById('weatherReactiveIntensityGroup');
+            if (weatherReactiveIntensityGroup) {
+                weatherReactiveIntensityGroup.style.display = state.bg.weatherReactive ? 'flex' : 'none';
+            }
+            setVal('weatherReactiveIntensitySlider', state.bg.weatherReactiveIntensity !== undefined ? state.bg.weatherReactiveIntensity : 50);
 
             setVal('overlaySize', state.overlay.size * 100); setVal('overlayOpacity', state.overlay.opacity * 100); setVal('overlaySpeed', state.overlay.speed * 100); setBtn('overlayBlendGroup', state.overlay.blend); setBtn('overlayAnimGroup', state.overlay.anim);
             setCheck('textEnable', state.textFx.enabled); setVal('textCustomInput', state.textFx.customText); setVal('textFontSelect', state.textFx.font); setBtn('textColorModeGroup', state.textFx.colorMode); setVal('textColorPicker', state.textFx.color); setVal('textArgbSpeedSlider', state.textFx.argbSpeed); setVal('textSizeSlider', state.textFx.size); setBtn('textAlignGroup', state.textFx.align); setBtn('textEffectGroup', state.textFx.effect); setVal('textIntensitySlider', state.textFx.intensity); setBtn('textAnimGroup', state.textFx.anim); setVal('textAnimSpeedSlider', state.textFx.animSpeed);
