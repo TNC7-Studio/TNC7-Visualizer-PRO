@@ -405,22 +405,23 @@
                     <option value="1080" selected>1080p</option>
                 </select>
                 <select id="renderFpsSelect" class="custom-select w-[60px]" title="Framerate">
+                    <option value="24" selected>24 FPS</option>
                     <option value="30">30 FPS</option>
                     <option value="60">60 FPS</option>
                 </select>
                 <div class="w-px h-4 bg-gray-700 mx-1"></div>
                 
                 <span class="text-[10px] font-bold text-gray-500 tracking-wider mr-1">BITRATE:</span>
-                <button class="btn-custom btn-active" data-val="variable">VBR</button>
-                <button class="btn-custom" data-val="constant">CBR</button>
+                <button class="btn-custom" data-val="variable">VBR</button>
+                <button class="btn-custom btn-active" data-val="constant">CBR</button>
                 <select id="renderBitrateSelect" class="custom-select w-[80px] ml-1">
                     <option value="3000000">3.0 Mbps</option>
                     <option value="4000000">4.0 Mbps</option>
-                    <option value="5000000" selected>5.0 Mbps</option>
+                    <option value="5000000">5.0 Mbps</option>
                     <option value="6000000">6.0 Mbps</option>
                     <option value="8000000">8.0 Mbps</option>
                     <option value="10000000">10.0 Mbps</option>
-                    <option value="12000000">12.0 Mbps</option>
+                    <option value="12000000" selected>12.0 Mbps</option>
                 </select>
                 <select id="renderMethodSelect" class="custom-select w-20 ml-1">
                     <option value="pisah">Pisah File</option>
@@ -1273,7 +1274,7 @@
             progressBarFx: { enabled: false, style: 'outline', showTime: true, showTitle: true, showControls: true, font: 'Inter', color: '#ffffff', progressColor: '#ffffff', width: 0.8, thickness: 4, offsetX: 0, offsetY: -100, reactive: false, particles: false, colorMode: 'statis', argbSpeed: 15 },
             playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
             lyrics: { enabled: true, font: 'Inter', transform: 'capitalize', size: 36, posY: 150, delay: 0, colorBase: '#ffffff', colorActive: '#facc15', effect: 'shadow', animMode: 'scroll', interludeFade: 0, syncSpeed: 1.0 },
-            render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 5000000, method: 'pisah' }
+            render: { res: 1080, fps: 24, bitrateMode: 'constant', targetBitrate: 12000000, method: 'pisah' }
         };
 
         let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null };
