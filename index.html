@@ -644,44 +644,100 @@
                 </div>
                 
                 <div class="panel-content mt-1">
-                    <div class="control-row">
-                        <span class="control-label text-[9px] w-10">Teks</span>
-                        <div class="flex-1"><input type="text" id="textCustomInput" class="custom-input" placeholder="Otomatis (Nama Lagu)"></div>
+                    <!-- FITUR BARU: Popup Text Info Berkala -->
+                    <div class="flex flex-col gap-1 bg-gray-800/50 p-1 rounded border border-gray-700 mb-1">
+                        <label class="flex items-center gap-1 cursor-pointer w-full p-1">
+                            <input type="checkbox" id="textPopupEnable" class="rounded border-gray-600 bg-gray-700 text-yellow-400 focus:ring-yellow-400 h-3 w-3">
+                            <span class="text-[10px] text-yellow-400 font-bold uppercase tracking-wider">🔔 POPUP INFO BERKALA</span>
+                        </label>
+                        <div id="textPopupSettings" class="hidden flex-col gap-1 px-1 pb-1">
+                            <div class="control-row mt-0">
+                                <span class="control-label text-[9px] w-10">Teks Info</span>
+                                <div class="flex-1"><input type="text" id="textPopupCustomInput" class="custom-input" placeholder="Teks Info (Misal: Follow IG @..)"></div>
+                            </div>
+                            <div class="control-row mt-0">
+                                <span class="control-label text-[9px] w-10">Interval</span>
+                                <div class="flex-1 flex items-center">
+                                    <input type="range" id="textPopupIntervalSlider" min="10" max="300" value="60" step="5" data-no-indicator="true">
+                                    <span class="text-[9px] text-gray-400 ml-1 w-8 text-right shrink-0 font-medium" id="textPopupIntervalDisplay" title="Muncul setiap n detik">60s</span>
+                                </div>
+                            </div>
+                            <div class="control-row mt-0">
+                                <span class="control-label text-[9px] w-10">Durasi</span>
+                                <div class="flex-1 flex items-center">
+                                    <input type="range" id="textPopupTimeSlider" min="2" max="30" value="10" data-no-indicator="true">
+                                    <span class="text-[9px] text-gray-400 ml-1 w-8 text-right shrink-0 font-medium" id="textPopupTimeDisplay" title="Lama popup tertampil">10s</span>
+                                </div>
+                            </div>
+                            <div class="control-row mt-0">
+                                <span class="control-label text-[9px] w-10">Gaya</span>
+                                <div class="flex-1">
+                                    <select class="custom-select" id="textPopupStyleSelect">
+                                        <option value="modern">Modern</option>
+                                        <option value="minimalis">Minimalis</option>
+                                        <option value="cyberpunk">Cyberpunk</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="control-row mt-0">
+                                <span class="control-label text-[9px] w-10">Skala</span>
+                                <div class="flex-1 flex items-center">
+                                    <input type="range" id="textPopupScaleSlider" min="50" max="200" value="100">
+                                </div>
+                            </div>
+                            <div class="control-row mt-0">
+                                <span class="control-label text-[9px] w-10">Wrn Teks</span>
+                                <div class="flex-1">
+                                    <input type="color" id="textPopupColorPicker" value="#ffffff" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent">
+                                </div>
+                            </div>
+                            <div class="control-row mt-0">
+                                <span class="control-label text-[9px] w-10">Wrn Tepi</span>
+                                <div class="flex-1">
+                                    <input type="color" id="textPopupBorderColorPicker" value="#facc15" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent">
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="control-row">
+
+                    <!-- MENGEMBALIKAN KONTROL TEXT OVERLAY LAMA YANG HILANG -->
+                    <div class="control-row mt-1">
+                        <span class="control-label text-[9px] w-10">Teks</span>
+                        <div class="flex-1"><input type="text" id="textCustomInput" class="custom-input" placeholder="Teks Kustom (Kosong=Judul)"></div>
+                    </div>
+                    <div class="control-row mt-1">
                         <span class="control-label text-[9px] w-10">Font</span>
                         <div class="flex-1">
                             <select class="custom-select" id="textFontSelect">
                                 <option value="Inter">Inter (Modern)</option>
-                                <option value="Montserrat">Montserrat (Elegan)</option>
-                                <option value="Poppins">Poppins (Bulat)</option>
-                                <option value="Oswald">Oswald (Tinggi)</option>
-                                <option value="Bebas Neue">Bebas Neue (Tebal)</option>
-                                <option value="Righteous">Righteous (Tekno)</option>
-                                <option value="Courier New">Courier (Mono)</option>
-                                <option value="Impact">Impact (Bold)</option>
-                                <option value="Arial">Arial (Basic)</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Poppins">Poppins</option>
+                                <option value="Oswald">Oswald</option>
+                                <option value="Bebas Neue">Bebas Neue</option>
+                                <option value="Righteous">Righteous</option>
+                                <option value="'Share Tech Mono', monospace">Share Tech Mono</option>
                             </select>
                         </div>
                     </div>
-
-                    <div class="flex items-start gap-1 mt-1">
-                        <span class="text-[9px] font-bold text-gray-500 w-10 tracking-wider mt-1 uppercase">Warna</span>
-                        <div class="flex flex-col gap-1 flex-1">
-                            <div class="flex gap-1 flex-wrap" id="textColorModeGroup">
-                                <button class="btn-custom btn-active" data-val="auto">ARGB</button>
-                                <button class="btn-custom" data-val="statis">Statis</button>
-                            </div>
-                            <div class="flex items-center gap-1 w-full mt-0" id="textStaticColorGroup" style="display: none;">
-                                <span class="text-[9px] text-gray-400 w-8">Pilih</span>
-                                <div class="flex-1 flex items-center"><input type="color" id="textColorPicker" value="#ffffff" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent"></div>
-                            </div>
-                            <div class="flex items-center gap-1 w-full mt-0" id="textArgbSpeedGroup">
-                                <span class="text-[9px] text-gray-400 w-8">Speed</span>
-                                <div class="flex-1 flex items-center"><input type="range" min="1" max="100" value="15" id="textArgbSpeedSlider"></div>
-                            </div>
+                    
+                    <div class="flex items-center justify-between w-full mt-1 border border-[#2a3142] rounded px-1 py-1">
+                        <span class="text-[9px] font-bold text-gray-500 tracking-wider">MODE WARNA</span>
+                        <div class="flex items-center gap-1" id="textColorModeGroup">
+                            <button class="btn-custom btn-active" data-val="auto">ARGB</button>
+                            <button class="btn-custom" data-val="statis">Statis</button>
                         </div>
                     </div>
+
+                    <div class="flex items-center gap-1 mt-1 w-full" id="textStaticColorGroup" style="display: none;">
+                        <span class="text-[9px] font-bold text-gray-500 w-10 tracking-wider uppercase">Warna</span>
+                        <div class="flex-1"><input type="color" id="textColorPicker" value="#ffffff" class="w-full h-4 rounded cursor-pointer border-0 p-0 bg-transparent"></div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 mt-1 w-full" id="textArgbSpeedGroup">
+                        <span class="text-[9px] font-bold text-gray-500 w-10 tracking-wider uppercase">Cepat</span>
+                        <div class="flex-1 flex items-center"><input type="range" min="1" max="100" value="15" id="textArgbSpeedSlider"></div>
+                    </div>
+                    <!-- AKHIR PENGEMBALIAN KONTROL TEXT OVERLAY LAMA -->
 
                     <div class="flex items-center text-[9px] justify-between w-full mt-1 border border-[#2a3142] rounded p-1">
                         <div class="flex items-center gap-1 flex-1 pr-1">
@@ -1282,7 +1338,7 @@
             viz2: { enabled: false, align: 'full', size: 0.3, width: 0.5, opacity: 1.0, type: 'wave_double', offsetX: 0, offsetY: -150, colorMode: 'auto', staticColor: '#3b82f6', argbSpeed: 20 },
             bg: { color: '#0f1115', image: null, imgElement: null, effect: 'normal', weather: ['normal'], weatherProps: { salju: {intensity: 50, speed: 50}, hujan_emas: {intensity: 50, speed: 50}, hujan_air: {intensity: 50, speed: 50}, petir: {intensity: 50, speed: 50}, asap_warna: {intensity: 50, speed: 50, color: '#a0aec0'} }, darkness: 0, pulseIntensity: 0.50, scale: 1.0, snowIntensity: 50, weatherSpeed: 50, mirror: false, autoSlideshow: false, slideshowInterval: 10, beatDropFx: false, crossfade: true, crossfadeDuration: 1.0, weatherReactive: false, weatherReactiveIntensity: 50 },
             overlay: { element: null, type: null, lapisan: 'depan', blend: 'normal', size: 0.5, opacity: 1, speed: 0.5, anim: 'none', offsetX: 0, offsetY: 0, animTime: 0, lastDrawTime: 0 },
-            textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50 },
+            textFx: { enabled: false, customText: '', font: 'Inter', size: 40, color: '#ffffff', colorMode: 'auto', argbSpeed: 15, effect: 'none', intensity: 50, anim: 'none', offsetX: 0, offsetY: 0, align: 'left', animSpeed: 50, popupEnabled: false, popupText: 'Support Terus Channel Ini Ya Guys...', popupTime: 10, popupInterval: 60, popupOffsetX: 0, popupOffsetY: 0, popupStyle: 'modern', popupScale: 1.0, popupColor: '#ffffff', popupBorderColor: '#facc15' },
             timeFx: { enabled: false, format: 'duration', font: "'Share Tech Mono', monospace", size: 30, color: '#ffffff', opacity: 1.0, offsetX: 0, offsetY: 0 },
             progressBarFx: { enabled: false, style: 'outline', showTime: true, showTitle: true, showControls: true, font: 'Inter', color: '#ffffff', progressColor: '#ffffff', width: 0.8, thickness: 4, offsetX: 0, offsetY: -100, reactive: false, particles: false, colorMode: 'statis', argbSpeed: 15 },
             playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
@@ -1290,7 +1346,7 @@
             render: { res: 1080, fps: 24, bitrateMode: 'constant', targetBitrate: 12000000, method: 'pisah' }
         };
 
-        let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null };
+        let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null, textPopup: null };
         let canvas = document.getElementById('previewCanvas');
         let ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
@@ -1434,15 +1490,23 @@
         
         bindButtonGroup('lyricsTransformGroup', 'lyrics', 'transform'); bindButtonGroup('lyricsEffectGroup', 'lyrics', 'effect');
 
-        document.getElementById('textColorModeGroup').querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const mode = btn.getAttribute('data-val');
-                if (mode === 'auto') { document.getElementById('textStaticColorGroup').style.display = 'none'; document.getElementById('textArgbSpeedGroup').style.display = 'flex'; } 
-                else if (mode === 'statis') { document.getElementById('textStaticColorGroup').style.display = 'flex'; document.getElementById('textArgbSpeedGroup').style.display = 'none'; }
+        const textColorModeGrp = document.getElementById('textColorModeGroup');
+        if (textColorModeGrp) {
+            textColorModeGrp.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const mode = btn.getAttribute('data-val');
+                    const statGrp = document.getElementById('textStaticColorGroup');
+                    const argbGrp = document.getElementById('textArgbSpeedGroup');
+                    if (mode === 'auto') { if (statGrp) statGrp.style.display = 'none'; if (argbGrp) argbGrp.style.display = 'flex'; } 
+                    else if (mode === 'statis') { if (statGrp) statGrp.style.display = 'flex'; if (argbGrp) argbGrp.style.display = 'none'; }
+                });
             });
-        });
+        }
         
-        document.getElementById('textArgbSpeedSlider').addEventListener('input', (e) => { state.textFx.argbSpeed = parseFloat(e.target.value); });
+        const textArgbSpeedSlider = document.getElementById('textArgbSpeedSlider');
+        if (textArgbSpeedSlider) {
+            textArgbSpeedSlider.addEventListener('input', (e) => { state.textFx.argbSpeed = parseFloat(e.target.value); });
+        }
         
         document.querySelectorAll('#vizTabGroup button').forEach(btn => {
             btn.addEventListener('click', () => { switchVizTab(btn.dataset.viz); });
@@ -1467,16 +1531,16 @@
         document.getElementById('vizColorPicker').addEventListener('input', (e) => { state[activeVizTab].staticColor = e.target.value; });
         document.getElementById('vizTypeSelect').addEventListener('change', (e) => { state[activeVizTab].type = e.target.value; });
 
-        document.getElementById('textEnable').addEventListener('change', (e) => { state.textFx.enabled = e.target.checked; });
-        document.getElementById('timeEnable').addEventListener('change', (e) => { state.timeFx.enabled = e.target.checked; });
-        document.getElementById('textCustomInput').addEventListener('input', (e) => { state.textFx.customText = e.target.value; });
-        document.getElementById('textFontSelect').addEventListener('change', (e) => { state.textFx.font = e.target.value; });
-        document.getElementById('timeFontSelect').addEventListener('change', (e) => { state.timeFx.font = e.target.value; });
-        document.getElementById('textSizeSlider').addEventListener('input', (e) => { state.textFx.size = parseInt(e.target.value); });
-        document.getElementById('textColorPicker').addEventListener('input', (e) => { state.textFx.color = e.target.value; });
-        document.getElementById('timeSizeSlider').addEventListener('input', (e) => { state.timeFx.size = parseInt(e.target.value); });
-        document.getElementById('timeOpacitySlider').addEventListener('input', (e) => { state.timeFx.opacity = e.target.value / 100; });
-        document.getElementById('timeColorPicker').addEventListener('input', (e) => { state.timeFx.color = e.target.value; });
+        document.getElementById('textEnable')?.addEventListener('change', (e) => { state.textFx.enabled = e.target.checked; });
+        document.getElementById('timeEnable')?.addEventListener('change', (e) => { state.timeFx.enabled = e.target.checked; });
+        document.getElementById('textCustomInput')?.addEventListener('input', (e) => { state.textFx.customText = e.target.value; });
+        document.getElementById('textFontSelect')?.addEventListener('change', (e) => { state.textFx.font = e.target.value; });
+        document.getElementById('timeFontSelect')?.addEventListener('change', (e) => { state.timeFx.font = e.target.value; });
+        document.getElementById('textSizeSlider')?.addEventListener('input', (e) => { state.textFx.size = parseInt(e.target.value); });
+        document.getElementById('textColorPicker')?.addEventListener('input', (e) => { state.textFx.color = e.target.value; });
+        document.getElementById('timeSizeSlider')?.addEventListener('input', (e) => { state.timeFx.size = parseInt(e.target.value); });
+        document.getElementById('timeOpacitySlider')?.addEventListener('input', (e) => { state.timeFx.opacity = e.target.value / 100; });
+        document.getElementById('timeColorPicker')?.addEventListener('input', (e) => { state.timeFx.color = e.target.value; });
         
         // Event Listener untuk Progress Bar
         document.getElementById('progressBarFxEnable').addEventListener('change', (e) => { state.progressBarFx.enabled = e.target.checked; });
@@ -1552,9 +1616,36 @@
         document.getElementById('lyricsBaseColorPicker').addEventListener('input', (e) => { state.lyrics.colorBase = e.target.value; });
         document.getElementById('lyricsActiveColorPicker').addEventListener('input', (e) => { state.lyrics.colorActive = e.target.value; });
 
-        document.getElementById('textIntensitySlider').addEventListener('input', (e) => { state.textFx.intensity = parseInt(e.target.value); });
-        document.getElementById('textAnimSpeedSlider').addEventListener('input', (e) => { state.textFx.animSpeed = parseInt(e.target.value); });
+        document.getElementById('textIntensitySlider')?.addEventListener('input', (e) => { state.textFx.intensity = parseInt(e.target.value); });
+        document.getElementById('textAnimSpeedSlider')?.addEventListener('input', (e) => { state.textFx.animSpeed = parseInt(e.target.value); });
         
+        // Listener untuk fitur baru Text Popup
+        document.getElementById('textPopupEnable')?.addEventListener('change', (e) => { 
+            state.textFx.popupEnabled = e.target.checked; 
+            const settings = document.getElementById('textPopupSettings');
+            if (settings) {
+                if (e.target.checked) { settings.classList.remove('hidden'); settings.classList.add('flex'); }
+                else { settings.classList.add('hidden'); settings.classList.remove('flex'); }
+            }
+        });
+        document.getElementById('textPopupCustomInput')?.addEventListener('input', (e) => { state.textFx.popupText = e.target.value; });
+        
+        document.getElementById('textPopupIntervalSlider')?.addEventListener('input', (e) => { 
+            state.textFx.popupInterval = parseInt(e.target.value); 
+            const disp = document.getElementById('textPopupIntervalDisplay');
+            if (disp) disp.textContent = e.target.value + 's';
+        });
+
+        document.getElementById('textPopupTimeSlider')?.addEventListener('input', (e) => { 
+            state.textFx.popupTime = parseInt(e.target.value); 
+            const disp = document.getElementById('textPopupTimeDisplay');
+            if (disp) disp.textContent = e.target.value + 's';
+        });
+        document.getElementById('textPopupStyleSelect')?.addEventListener('change', (e) => { state.textFx.popupStyle = e.target.value; });
+        document.getElementById('textPopupScaleSlider')?.addEventListener('input', (e) => { state.textFx.popupScale = parseInt(e.target.value) / 100; });
+        document.getElementById('textPopupColorPicker')?.addEventListener('input', (e) => { state.textFx.popupColor = e.target.value; });
+        document.getElementById('textPopupBorderColorPicker')?.addEventListener('input', (e) => { state.textFx.popupBorderColor = e.target.value; });
+
         document.getElementById('overlaySize').addEventListener('input', (e) => { state.overlay.size = e.target.value / 100; });
         document.getElementById('overlayOpacity').addEventListener('input', (e) => { state.overlay.opacity = e.target.value / 100; });
         document.getElementById('overlaySpeed').addEventListener('input', (e) => { state.overlay.speed = e.target.value / 100; });
@@ -2934,7 +3025,7 @@
             const w = 1280; const h = 720; const cx = w / 2; const cy = h / 2;
             
             ctx.fillStyle = state.bg.color || '#0f1115'; ctx.fillRect(0, 0, w, h);
-            bboxes.viz = null; bboxes.overlay = null; bboxes.text = null; bboxes.time = null; bboxes.playlist = null; bboxes.lyrics = null; bboxes.progressBar = null;
+            bboxes.viz = null; bboxes.overlay = null; bboxes.text = null; bboxes.time = null; bboxes.playlist = null; bboxes.lyrics = null; bboxes.progressBar = null; bboxes.textPopup = null;
             
             let audioReactivity = 0; let bgAudioReactivity = 0; let kickBassReactivity = 0; 
             if(dataArray) {
@@ -3629,6 +3720,143 @@
                 bboxes.playlist = { x: bboxX, y: startY, w: maxTextWidth * scaleW, h: totalHeight * scaleH }; ctx.restore();
             }
             
+            // DRAW LOGIC UNTUK TEXT POPUP (AKHIR LAGU)
+            if (state.textFx.popupEnabled && (audioElement.src || isOfflineRendering)) {
+                let curTime = isOfflineRendering ? window.offlineCurrentTime : audioElement.currentTime;
+                let dur = audioElement.duration || (isOfflineRendering ? 100 : 0);
+                
+                let interval = state.textFx.popupInterval || 60;
+                let displayDur = state.textFx.popupTime || 10;
+                
+                // Menentukan apakah sekarang waktunya popup muncul berdasarkan interval
+                let cycleTime = curTime % interval;
+                let isPopupVisible = cycleTime < displayDur && dur > 0;
+
+                if (isPopupVisible) {
+                    let popupText = state.textFx.popupText || "Support Terus Channel Ini Ya Guys...";
+                    let resScale = h / 720;
+                    let customScale = state.textFx.popupScale !== undefined ? state.textFx.popupScale : 1.0;
+                    let style = state.textFx.popupStyle || 'modern';
+                    
+                    ctx.save();
+                    
+                    let fontSize = 28 * resScale * customScale;
+                    ctx.font = `bold ${fontSize}px Inter`;
+                    let textW = ctx.measureText(popupText).width;
+                    
+                    let toastW, toastH, borderRadius;
+                    
+                    if (style === 'minimalis') {
+                        toastW = textW + (60 * resScale * customScale);
+                        toastH = 60 * resScale * customScale;
+                        borderRadius = 4 * resScale * customScale;
+                    } else if (style === 'cyberpunk') {
+                        toastW = textW + (100 * resScale * customScale);
+                        toastH = 70 * resScale * customScale;
+                        borderRadius = 0;
+                    } else { // modern
+                        toastW = textW + (80 * resScale * customScale);
+                        toastH = 80 * resScale * customScale;
+                        borderRadius = 12 * resScale * customScale;
+                    }
+                    
+                    let slideY = 0;
+                    let popupAlpha = 1.0;
+                    const animDur = 0.8; // Durasi diperpanjang sedikit agar lebih smooth
+                    
+                    if (cycleTime < animDur) {
+                        // Animasi masuk (slide in dari atas & fade in)
+                        let slideProgress = cycleTime / animDur;
+                        slideY = (1 - Math.pow(1 - slideProgress, 3)) * toastH; 
+                        popupAlpha = Math.min(1, slideProgress * 1.5);
+                    } else if (cycleTime > displayDur - animDur) {
+                        // Animasi keluar (slide out ke atas & fade out)
+                        let slideProgress = (displayDur - cycleTime) / animDur;
+                        slideY = (1 - Math.pow(1 - slideProgress, 3)) * toastH;
+                        popupAlpha = Math.max(0, slideProgress);
+                    } else {
+                        // Tampil penuh
+                        slideY = toastH;
+                    }
+
+                    let toastX = cx - (toastW / 2) + (state.textFx.popupOffsetX || 0);
+                    let toastY = (40 * resScale) - toastH + slideY + (state.textFx.popupOffsetY || 0); 
+                    
+                    ctx.translate(toastX, toastY);
+                    ctx.globalAlpha = popupAlpha; // Terapkan transisi smooth pudar
+                    
+                    let borderColor = state.textFx.popupBorderColor || '#facc15';
+                    let barProgress = 1 - (cycleTime / displayDur);
+                    
+                    if (style === 'minimalis') {
+                        ctx.fillStyle = 'rgba(20, 20, 20, 0.85)';
+                        ctx.beginPath(); ctx.roundRect(0, 0, toastW, toastH, borderRadius); ctx.fill();
+                        
+                        ctx.fillStyle = borderColor;
+                        ctx.fillRect(0, 0, 4 * resScale * customScale, toastH);
+                        
+                        ctx.fillStyle = state.textFx.popupColor || '#ffffff';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(popupText, toastW / 2, toastH / 2);
+                        
+                        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                        ctx.fillRect(0, toastH - (2 * resScale * customScale), toastW, 2 * resScale * customScale);
+                        ctx.fillStyle = borderColor;
+                        ctx.fillRect(0, toastH - (2 * resScale * customScale), toastW * barProgress, 2 * resScale * customScale);
+                        
+                    } else if (style === 'cyberpunk') {
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+                        ctx.strokeStyle = borderColor;
+                        ctx.lineWidth = 2 * resScale * customScale;
+                        
+                        ctx.beginPath();
+                        let cp = 15 * resScale * customScale;
+                        ctx.moveTo(0, cp); ctx.lineTo(cp, 0); ctx.lineTo(toastW, 0);
+                        ctx.lineTo(toastW, toastH - cp); ctx.lineTo(toastW - cp, toastH); ctx.lineTo(0, toastH);
+                        ctx.closePath();
+                        ctx.fill(); ctx.stroke();
+                        
+                        ctx.fillStyle = state.textFx.popupColor || '#ffffff';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.shadowColor = 'transparent';
+                        ctx.shadowBlur = 0;
+                        ctx.fillText(popupText, toastW / 2, toastH / 2);
+                        
+                        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                        ctx.fillRect(cp, toastH - (6 * resScale * customScale), toastW - (cp * 2), 2 * resScale * customScale);
+                        ctx.fillStyle = borderColor;
+                        ctx.fillRect(cp, toastH - (6 * resScale * customScale), (toastW - (cp * 2)) * barProgress, 2 * resScale * customScale);
+                        
+                    } else {
+                        // Box Background (Modern)
+                        ctx.fillStyle = 'rgba(15, 17, 21, 0.9)';
+                        ctx.strokeStyle = borderColor;
+                        ctx.lineWidth = 2 * resScale;
+                        ctx.beginPath(); ctx.roundRect(0, 0, toastW, toastH, borderRadius); ctx.fill(); ctx.stroke();
+                        
+                        // Ikon & Teks
+                        ctx.fillStyle = state.textFx.popupColor || '#ffffff';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(popupText, toastW / 2, toastH / 2);
+                        
+                        // Progress bar pengecilan
+                        let barH = 6 * resScale * customScale;
+                        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                        ctx.beginPath(); ctx.roundRect(0, toastH - barH, toastW, barH, [0, 0, borderRadius, borderRadius]); ctx.fill();
+                        
+                        ctx.fillStyle = borderColor;
+                        ctx.beginPath(); ctx.roundRect(0, toastH - barH, toastW * barProgress, barH, [0, 0, 0, borderRadius]); ctx.fill();
+                    }
+                    
+                    bboxes.textPopup = { x: toastX, y: toastY, w: toastW, h: toastH };
+                    
+                    ctx.restore();
+                }
+            }
+
             if (state.playlistFx.upNextToast && playlist.length > 1 && currentTrackIndex < playlist.length - 1) {
                 let curTime = isOfflineRendering ? window.offlineCurrentTime : audioElement.currentTime;
                 let dur = audioElement.duration || (isOfflineRendering ? 100 : 0);
@@ -4065,7 +4293,27 @@
             setVal('weatherReactiveIntensitySlider', state.bg.weatherReactiveIntensity !== undefined ? state.bg.weatherReactiveIntensity : 50);
 
             setVal('overlaySize', state.overlay.size * 100); setVal('overlayOpacity', state.overlay.opacity * 100); setVal('overlaySpeed', state.overlay.speed * 100); setBtn('overlayBlendGroup', state.overlay.blend); setBtn('overlayAnimGroup', state.overlay.anim);
+            
             setCheck('textEnable', state.textFx.enabled); setVal('textCustomInput', state.textFx.customText); setVal('textFontSelect', state.textFx.font); setBtn('textColorModeGroup', state.textFx.colorMode); setVal('textColorPicker', state.textFx.color); setVal('textArgbSpeedSlider', state.textFx.argbSpeed); setVal('textSizeSlider', state.textFx.size); setBtn('textAlignGroup', state.textFx.align); setBtn('textEffectGroup', state.textFx.effect); setVal('textIntensitySlider', state.textFx.intensity); setBtn('textAnimGroup', state.textFx.anim); setVal('textAnimSpeedSlider', state.textFx.animSpeed);
+            
+            // Binding UI untuk Text Popup Baru
+            setCheck('textPopupEnable', state.textFx.popupEnabled);
+            setVal('textPopupCustomInput', state.textFx.popupText);
+            setVal('textPopupIntervalSlider', state.textFx.popupInterval);
+            if (document.getElementById('textPopupIntervalDisplay')) document.getElementById('textPopupIntervalDisplay').textContent = (state.textFx.popupInterval || 60) + 's';
+            setVal('textPopupTimeSlider', state.textFx.popupTime);
+            if (document.getElementById('textPopupTimeDisplay')) document.getElementById('textPopupTimeDisplay').textContent = (state.textFx.popupTime || 10) + 's';
+            setVal('textPopupStyleSelect', state.textFx.popupStyle || 'modern');
+            setVal('textPopupScaleSlider', (state.textFx.popupScale !== undefined ? state.textFx.popupScale : 1.0) * 100);
+            setVal('textPopupColorPicker', state.textFx.popupColor || '#ffffff');
+            setVal('textPopupBorderColorPicker', state.textFx.popupBorderColor || '#facc15');
+            
+            const txtPopupSettings = document.getElementById('textPopupSettings');
+            if (txtPopupSettings) {
+                if (state.textFx.popupEnabled) { txtPopupSettings.classList.remove('hidden'); txtPopupSettings.classList.add('flex'); }
+                else { txtPopupSettings.classList.add('hidden'); txtPopupSettings.classList.remove('flex'); }
+            }
+
             setCheck('timeEnable', state.timeFx.enabled); setBtn('timeFormatGroup', state.timeFx.format); setVal('timeFontSelect', state.timeFx.font); setVal('timeColorPicker', state.timeFx.color); setVal('timeSizeSlider', state.timeFx.size); setVal('timeOpacitySlider', state.timeFx.opacity * 100);
             
             setCheck('progressBarFxEnable', state.progressBarFx.enabled); setVal('progressBarFxStyleSelect', state.progressBarFx.style); setCheck('progressBarFxShowTime', state.progressBarFx.showTime); setCheck('progressBarFxShowTitle', state.progressBarFx.showTitle); setCheck('progressBarFxShowControls', state.progressBarFx.showControls); setVal('progressBarFxFontSelect', state.progressBarFx.font); setVal('progressBarFxColorPicker', state.progressBarFx.color); setVal('progressBarFxProgressColorPicker', state.progressBarFx.progressColor); setVal('progressBarFxWidthSlider', state.progressBarFx.width * 100); setVal('progressBarFxThicknessSlider', state.progressBarFx.thickness);
@@ -4094,7 +4342,16 @@
             setVal('renderResSelect', state.render.res); setVal('renderFpsSelect', state.render.fps);
 
             document.querySelectorAll('input[type=range]:not([data-no-indicator])').forEach(slider => { const span = slider.parentElement.querySelector('.val-indicator'); if (span) span.textContent = slider.value; });
-            if (state.textFx.colorMode === 'auto') { document.getElementById('textStaticColorGroup').style.display = 'none'; document.getElementById('textArgbSpeedGroup').style.display = 'flex'; } else { document.getElementById('textStaticColorGroup').style.display = 'flex'; document.getElementById('textArgbSpeedGroup').style.display = 'none'; }
+            
+            const tStatGrp = document.getElementById('textStaticColorGroup');
+            const tArgbGrp = document.getElementById('textArgbSpeedGroup');
+            if (state.textFx.colorMode === 'auto') { 
+                if (tStatGrp) tStatGrp.style.display = 'none'; 
+                if (tArgbGrp) tArgbGrp.style.display = 'flex'; 
+            } else { 
+                if (tStatGrp) tStatGrp.style.display = 'flex'; 
+                if (tArgbGrp) tArgbGrp.style.display = 'none'; 
+            }
         }
 
         function performUndo() {
@@ -4118,6 +4375,7 @@
         function handleDragStart(e) {
             const pos = getCanvasMousePos(e); let clicked = null;
             if (state.textFx.enabled && bboxes.text) { const padding = 10; if (pos.x >= bboxes.text.x - padding && pos.x <= bboxes.text.x + bboxes.text.w + padding && pos.y >= bboxes.text.y - padding && pos.y <= bboxes.text.y + bboxes.text.h + padding) { clicked = 'text'; } }
+            if (!clicked && state.textFx.popupEnabled && bboxes.textPopup) { if (pos.x >= bboxes.textPopup.x && pos.x <= bboxes.textPopup.x + bboxes.textPopup.w && pos.y >= bboxes.textPopup.y && pos.y <= bboxes.textPopup.y + bboxes.textPopup.h) { clicked = 'textPopup'; } }
             if (!clicked && state.timeFx.enabled && bboxes.time) { const padding = 10; if (pos.x >= bboxes.time.x - padding && pos.x <= bboxes.time.x + bboxes.time.w + padding && pos.y >= bboxes.time.y - padding && pos.y <= bboxes.time.y + bboxes.time.h + padding) { clicked = 'time'; } }
             if (!clicked && state.progressBarFx.enabled && bboxes.progressBar) { if (pos.x >= bboxes.progressBar.x && pos.x <= bboxes.progressBar.x + bboxes.progressBar.w && pos.y >= bboxes.progressBar.y && pos.y <= bboxes.progressBar.y + bboxes.progressBar.h) { clicked = 'progressBar'; } }
             if (!clicked && state.playlistFx.enabled && bboxes.playlist) { const padding = 10; if (pos.x >= bboxes.playlist.x - padding && pos.x <= bboxes.playlist.x + bboxes.playlist.w + padding && pos.y >= bboxes.playlist.y - padding && pos.y <= bboxes.playlist.y + bboxes.playlist.h + padding) { clicked = 'playlist'; } }
@@ -4133,6 +4391,7 @@
                 else if (clicked === 'viz2') { initialOffsetX = state.viz2.offsetX || 0; initialOffsetY = state.viz2.offsetY || 0; }
                 else if (clicked === 'overlay') { initialOffsetX = state.overlay.offsetX || 0; initialOffsetY = state.overlay.offsetY || 0; } 
                 else if (clicked === 'text') { initialOffsetX = state.textFx.offsetX || 0; initialOffsetY = state.textFx.offsetY || 0; }
+                else if (clicked === 'textPopup') { initialOffsetX = state.textFx.popupOffsetX || 0; initialOffsetY = state.textFx.popupOffsetY || 0; }
                 else if (clicked === 'time') { initialOffsetX = state.timeFx.offsetX || 0; initialOffsetY = state.timeFx.offsetY || 0; }
                 else if (clicked === 'progressBar') { initialOffsetX = state.progressBarFx.offsetX || 0; initialOffsetY = state.progressBarFx.offsetY || 0; }
                 else if (clicked === 'playlist') { initialOffsetX = state.playlistFx.offsetX || 0; initialOffsetY = state.playlistFx.offsetY || 0; }
@@ -4148,6 +4407,7 @@
             else if (draggingElement === 'viz2') { state.viz2.offsetX = initialOffsetX + dx; state.viz2.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'overlay') { state.overlay.offsetX = initialOffsetX + dx; state.overlay.offsetY = initialOffsetY + dy; } 
             else if (draggingElement === 'text') { state.textFx.offsetX = initialOffsetX + dx; state.textFx.offsetY = initialOffsetY + dy; }
+            else if (draggingElement === 'textPopup') { state.textFx.popupOffsetX = initialOffsetX + dx; state.textFx.popupOffsetY = initialOffsetY + dy; }
             else if (draggingElement === 'time') { state.timeFx.offsetX = initialOffsetX + dx; state.timeFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'progressBar') { state.progressBarFx.offsetX = initialOffsetX + dx; state.progressBarFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'playlist') { state.playlistFx.offsetX = initialOffsetX + dx; state.playlistFx.offsetY = initialOffsetY + dy; }
