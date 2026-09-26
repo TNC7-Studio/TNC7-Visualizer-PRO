@@ -412,8 +412,9 @@
                 <div class="w-px h-4 bg-gray-700 mx-1"></div>
                 
                 <span class="text-[10px] font-bold text-gray-500 tracking-wider mr-1">BITRATE:</span>
+                <button class="btn-custom btn-active" data-val="smart" title="Kompresi Cerdas (Ukuran Kecil, Resolusi Tajam)">SMART</button>
                 <button class="btn-custom" data-val="variable">VBR</button>
-                <button class="btn-custom btn-active" data-val="constant">CBR</button>
+                <button class="btn-custom" data-val="constant">CBR</button>
                 <select id="renderBitrateSelect" class="custom-select w-[80px] ml-1">
                     <option value="3000000">3.0 Mbps</option>
                     <option value="4000000">4.0 Mbps</option>
@@ -1343,7 +1344,7 @@
             progressBarFx: { enabled: false, style: 'outline', showTime: true, showTitle: true, showControls: true, font: 'Inter', color: '#ffffff', progressColor: '#ffffff', width: 0.8, thickness: 4, offsetX: 0, offsetY: -100, reactive: false, particles: false, colorMode: 'statis', argbSpeed: 15 },
             playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
             lyrics: { enabled: true, font: 'Inter', transform: 'capitalize', size: 36, posY: 150, delay: 0, colorBase: '#ffffff', colorActive: '#facc15', effect: 'shadow', animMode: 'scroll', interludeFade: 0, syncSpeed: 1.0 },
-            render: { res: 1080, fps: 24, bitrateMode: 'constant', targetBitrate: 12000000, method: 'pisah' }
+            render: { res: 1080, fps: 24, bitrateMode: 'smart', targetBitrate: 12000000, method: 'pisah' }
         };
 
         let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null, textPopup: null };
@@ -1656,7 +1657,14 @@
             if (file.type.startsWith('video/')) {
                 const vid = document.createElement('video'); vid.src = url; vid.loop = true; vid.muted = true; vid.play();
                 state.overlay.element = vid; state.overlay.type = 'video';
-            } else { const img = new Image(); img.src = url; state.overlay.element = img; state.overlay.type = 'image'; }
+            } else { 
+                const img = new Image(); 
+                img.onload = async () => {
+                    try { state.overlay.element = await createImageBitmap(img); } // OPTIMASI: Akselerasi ImageBitmap
+                    catch(err) { state.overlay.element = img; }
+                };
+                img.src = url; state.overlay.type = 'image'; 
+            }
         });
         document.getElementById('btnHapusOverlay').addEventListener('click', () => { state.overlay.element = null; document.getElementById('overlayNameDisplay').textContent = "Belum ada"; });
 
@@ -2511,9 +2519,10 @@
                 if(!isPlaying && !isOfflineRendering) drawCanvas();
             } else {
                 const img = new Image();
-                img.onload = () => { 
+                img.onload = async () => { 
                     state.bg.image = item.url; 
-                    state.bg.imgElement = img; 
+                    try { state.bg.imgElement = await createImageBitmap(img); } // OPTIMASI: Akselerasi ImageBitmap
+                    catch(err) { state.bg.imgElement = img; }
                     if(!isPlaying && !isOfflineRendering) drawCanvas(); 
                 }; 
                 img.src = item.url;
@@ -2705,14 +2714,27 @@
                 let hasVideoChunks = false;
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addVideoChunk(chunk, meta); hasVideoChunks = true; } catch (e) { abortOfflineRender = true; } }, error: (e) => { abortOfflineRender = true; } });
                 
-                let vConfig = { codec: 'avc1.4d002a', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, bitrateMode: state.render.bitrateMode, hardwareAcceleration: 'prefer-hardware' };
+                let actualBitrateCombined = state.render.targetBitrate;
+                let actualModeCombined = state.render.bitrateMode;
+                
+                if (actualModeCombined === 'smart') {
+                    actualModeCombined = 'variable';
+                    // Kompresi Super Ekstrem: Hitung bitrate 0.035 bits per pixel (Sangat ramping, VBR pintar menjaga kejernihan)
+                    actualBitrateCombined = Math.round(targetWidth * targetHeight * targetFPS * 0.035);
+                }
+
+                let vConfig = { codec: 'avc1.640032', width: targetWidth, height: targetHeight, bitrate: actualBitrateCombined, framerate: targetFPS, bitrateMode: actualModeCombined, hardwareAcceleration: 'prefer-hardware', latencyMode: 'realtime' };
                 try {
                     const support = await window.VideoEncoder.isConfigSupported(vConfig);
                     if (!support.supported) {
-                        vConfig = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, hardwareAcceleration: 'no-preference' };
+                        vConfig.codec = 'avc1.4d002a';
+                        const supportFallback = await window.VideoEncoder.isConfigSupported(vConfig);
+                        if (!supportFallback.supported) {
+                            vConfig = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: actualBitrateCombined, framerate: targetFPS, hardwareAcceleration: 'no-preference', latencyMode: 'realtime' };
+                        }
                     }
                 } catch (e) {
-                    vConfig = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS };
+                    vConfig = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: actualBitrateCombined, framerate: targetFPS, latencyMode: 'realtime' };
                 }
                 videoEncoder.configure(vConfig);
 
@@ -2747,7 +2769,7 @@
                         for (let c = 0; c < numChannels; c++) { let sourceChannel = c < trackChannels ? c : 0; const srcData = originalAudioBuffer.getChannelData(sourceChannel).subarray(offset, offset + currentFrames); data.set(srcData, c * currentFrames); }
                         try { let chunkTimestamp = Math.round((totalAudioSamplesEncoded / targetSampleRate) * 1e6); const audioData = new AudioData({ format: 'f32-planar', sampleRate: targetSampleRate, numberOfFrames: currentFrames, numberOfChannels: numChannels, timestamp: chunkTimestamp, data: data }); audioEncoder.encode(audioData); audioData.close(); } catch(e) { abortOfflineRender = true; }
                         totalAudioSamplesEncoded += currentFrames;
-                        while (audioEncoder.state === 'configured' && audioEncoder.encodeQueueSize >= 50) { await new Promise(r => setTimeout(r, 2)); }
+                        while (audioEncoder.state === 'configured' && audioEncoder.encodeQueueSize >= 200) { await new Promise(r => setTimeout(r, 0)); }
                         if (offset % (framesPerChunk * 20) === 0) { statusIndicator.textContent = `PROSES AUDIO... ${Math.round((offset/totalFrames)*100)}%`; await new Promise(r => setTimeout(r, 0)); }
                     }
 
@@ -2780,7 +2802,7 @@
                             }
                         }
 
-                        if (frameIdx % 30 === 0) {
+                        if (frameIdx % 120 === 0) {
                             const progress = Math.min(100, Math.round((currentTimeInTrack / duration) * 100));
                             statusIndicator.textContent = `RENDER VIDEO... ${progress}%`;
                             const percent = (currentTimeInTrack / duration) * 100; progressBar.style.width = `${percent}%`; progressHandle.style.left = `${percent}%`;
@@ -2794,7 +2816,7 @@
                             try { videoEncoder.encode(vframe, { keyFrame: (frameIdx === 0) || (totalVideoFramesEncoded % targetFPS === 0) }); } catch (e) { abortOfflineRender = true; }
                             vframe.close(); totalVideoFramesEncoded++;
                         }
-                        while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 2)); }
+                        while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 60) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 0)); }
 
                         frameIdx++; let nextTime = frameIdx * interval;
                         if (nextTime < duration && !abortOfflineRender) {
@@ -2865,14 +2887,27 @@
 
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { try { muxer.addVideoChunk(chunk, meta); } catch (chunkErr) {} }, error: (e) => { abortOfflineRender = true; } });
                 
-                let vConfigSingle = { codec: 'avc1.4d002a', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, bitrateMode: state.render.bitrateMode, hardwareAcceleration: 'prefer-hardware' };
+                let actualBitrateSingle = state.render.targetBitrate;
+                let actualModeSingle = state.render.bitrateMode;
+                
+                if (actualModeSingle === 'smart') {
+                    actualModeSingle = 'variable';
+                    // Kompresi Super Ekstrem: Hitung bitrate 0.035 bits per pixel (Sangat ramping, VBR pintar menjaga kejernihan)
+                    actualBitrateSingle = Math.round(targetWidth * targetHeight * targetFPS * 0.035);
+                }
+
+                let vConfigSingle = { codec: 'avc1.640032', width: targetWidth, height: targetHeight, bitrate: actualBitrateSingle, framerate: targetFPS, bitrateMode: actualModeSingle, hardwareAcceleration: 'prefer-hardware', latencyMode: 'realtime' };
                 try {
                     const support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
                     if (!support.supported) {
-                        vConfigSingle = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS, hardwareAcceleration: 'no-preference' };
+                        vConfigSingle.codec = 'avc1.4d002a';
+                        const supportFallback = await window.VideoEncoder.isConfigSupported(vConfigSingle);
+                        if (!supportFallback.supported) {
+                            vConfigSingle = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: actualBitrateSingle, framerate: targetFPS, hardwareAcceleration: 'no-preference', latencyMode: 'realtime' };
+                        }
                     }
                 } catch (e) {
-                    vConfigSingle = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: state.render.targetBitrate, framerate: targetFPS };
+                    vConfigSingle = { codec: 'avc1.42E02A', width: targetWidth, height: targetHeight, bitrate: actualBitrateSingle, framerate: targetFPS, latencyMode: 'realtime' };
                 }
                 videoEncoder.configure(vConfigSingle);
 
@@ -2886,7 +2921,7 @@
                         let currentFrames = Math.min(framesPerChunk, totalFrames - offset); const data = new Float32Array(currentFrames * numChannels);
                         for (let c = 0; c < numChannels; c++) { const srcData = audioBuf.getChannelData(c).subarray(offset, offset + currentFrames); data.set(srcData, c * currentFrames); }
                         try { const audioData = new AudioData({ format: 'f32-planar', sampleRate: targetSampleRate, numberOfFrames: currentFrames, numberOfChannels: numChannels, timestamp: Math.round((offset / targetSampleRate) * 1e6), data: data }); enc.encode(audioData); audioData.close(); } catch(e) {}
-                        while (enc.state === 'configured' && enc.encodeQueueSize >= 50) { await new Promise(r => setTimeout(r, 2)); }
+                        while (enc.state === 'configured' && enc.encodeQueueSize >= 200) { await new Promise(r => setTimeout(r, 0)); }
                         if (offset % (framesPerChunk * 20) === 0) { indicator.textContent = `PROSES AUDIO... ${Math.round((offset/totalFrames)*100)}%`; await new Promise(r => setTimeout(r, 0)); }
                     }
                 }
@@ -2921,13 +2956,13 @@
                         if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) { currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length; loadBgImageFromPlaylist(currentImageIndex); lastSlideshowTime = window.offlineCurrentTime; }
                     }
 
-                    if (frameIdx % 30 === 0) {
+                    if (frameIdx % 120 === 0) {
                         const progress = Math.min(100, Math.round((currentTime / duration) * 100)); indicator.textContent = `RENDER VIDEO... ${progress}%`;
                         const percent = (currentTime / duration) * 100; progressBar.style.width = `${percent}%`; progressHandle.style.left = `${percent}%`; timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`; await new Promise(r => setTimeout(r, 0));
                     }
                     drawCanvas(); 
                     if (videoEncoder.state === 'configured') { const vframe = new VideoFrame(canvas, { timestamp: Math.round(currentTime * 1e6) }); try { videoEncoder.encode(vframe, { keyFrame: (frameIdx % targetFPS === 0) }); } catch (e) { } vframe.close(); }
-                    while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 2)); }
+                    while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 60) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 0)); }
                     
                     frameIdx++; let nextTime = frameIdx * interval;
                     if (nextTime < duration && !abortOfflineRender) {
@@ -3068,11 +3103,9 @@
                 else if (state.bg.effect === 'shake') { let shakeReactivity = Math.max(bgAudioReactivity, kickBassReactivity); if (shakeReactivity > 0.1) { let shakeAmt = shakeReactivity * 30 * state.bg.pulseIntensity; xOffBG = (Math.random() - 0.5) * shakeAmt; yOffBG = (Math.random() - 0.5) * shakeAmt; } } 
                 else if (state.bg.effect === 'pan') { scaleBG = (state.bg.scale * 1.2) + (0.1 * state.bg.pulseIntensity); xOffBG = Math.sin(timeBG * 0.15) * (w * 0.1 * state.bg.pulseIntensity) + (Math.cos(timeBG * 1.5) * bgAudioReactivity * 30 * state.bg.pulseIntensity); yOffBG = (Math.sin(timeBG * 1.5) * bgAudioReactivity * 30 * state.bg.pulseIntensity); }
 
-                if (state.bg.darkness < 0) { let brightVal = 1 + (-state.bg.darkness * 3); if (filterBG === 'none') filterBG = `brightness(${brightVal})`; else filterBG += ` brightness(${brightVal})`; }
-
                 ctx.save(); ctx.translate(w / 2 + xOffBG, h / 2 + yOffBG); ctx.rotate(rotBG); 
                 let actualScaleX = scaleBG * (state.bg.mirror ? -1 : 1); ctx.scale(actualScaleX, scaleBG);
-                ctx.globalAlpha = specificAlpha; ctx.filter = filterBG; 
+                ctx.globalAlpha = specificAlpha; 
                 ctx.drawImage(element, -drawW / 2, -drawH / 2, drawW, drawH); 
                 ctx.restore();
             };
@@ -3086,6 +3119,7 @@
                 if (state.bg.imgElement) { drawBgItem(state.bg.imgElement, globalAlphaBG); }
                 
                 if (state.bg.darkness > 0) { ctx.fillStyle = `rgba(0,0,0,${state.bg.darkness})`; ctx.fillRect(0, 0, w, h); }
+                else if (state.bg.darkness < 0) { ctx.fillStyle = `rgba(255,255,255,${-state.bg.darkness})`; ctx.fillRect(0, 0, w, h); }
             } else if (state.bg.color !== '#0f1115' && state.bg.color !== 'transparent' && state.bg.color !== '') {
                 if (state.bg.darkness > 0) { ctx.fillStyle = `rgba(0,0,0,${state.bg.darkness})`; ctx.fillRect(0,0,w,h); } else if (state.bg.darkness < 0) { ctx.fillStyle = `rgba(255,255,255,${-state.bg.darkness})`; ctx.fillRect(0,0,w,h); }
             }
