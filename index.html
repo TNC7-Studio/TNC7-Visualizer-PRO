@@ -403,6 +403,8 @@
                 <select id="renderResSelect" class="custom-select w-[60px]" title="Resolusi Video">
                     <option value="720">720p</option>
                     <option value="1080" selected>1080p</option>
+                    <option value="1440">1440p (2K)</option>
+                    <option value="2160">2160p (4K)</option>
                 </select>
                 <select id="renderFpsSelect" class="custom-select w-[60px]" title="Framerate">
                     <option value="24">24 FPS</option>
@@ -424,6 +426,10 @@
                     <option value="8000000">8.0 Mbps</option>
                     <option value="10000000">10.0 Mbps</option>
                     <option value="12000000">12.0 Mbps</option>
+                    <option value="24000000">24 Mbps (Super Jernih)</option>
+                    <option value="40000000">40 Mbps (Kualitas 2K)</option>
+                    <option value="60000000">60 Mbps (Kualitas 4K)</option>
+                    <option value="100000000">100 Mbps (Ultra HD)</option>
                 </select>
                 <select id="renderMethodSelect" class="custom-select w-20 ml-1">
                     <option value="pisah">Pisah File</option>
@@ -2357,8 +2363,15 @@
         });
 
         function resizeCanvas() {
-            canvas.width = state.render.res === 1080 ? 1920 : 1280;
-            canvas.height = state.render.res === 1080 ? 1080 : 720;
+            if (state.render.res === 2160) {
+                canvas.width = 3840; canvas.height = 2160;
+            } else if (state.render.res === 1440) {
+                canvas.width = 2560; canvas.height = 1440;
+            } else if (state.render.res === 1080) {
+                canvas.width = 1920; canvas.height = 1080;
+            } else {
+                canvas.width = 1280; canvas.height = 720;
+            }
         }
         window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 100);
 
@@ -2434,7 +2447,12 @@
 
         document.getElementById('audioInput').addEventListener('change', (e) => {
             const files = Array.from(e.target.files); if (files.length === 0) return;
-            files.forEach(file => playlist.push({ file: file }));
+            files.forEach(file => {
+                if (file.type.startsWith('video/')) {
+                    setTimeout(() => showNotification(`Tips: Jika gagal render, convert video "${file.name}" ke MP3 terlebih dahulu.`), 1500);
+                }
+                playlist.push({ file: file });
+            });
             if (currentTrackIndex === -1 && playlist.length > 0) loadTrack(0); else renderPlaylist();
             e.target.value = '';
         });
@@ -2635,7 +2653,17 @@
 
         function forceGarbageCollection() {
             snowflakes = []; raindrops = []; goldDrops = []; lightnings = []; smokes = []; progressBarSparks = []; window.plexusNodes = null; window.cyberCaps = null; smoothedKick = 0;
-            if (canvas) { canvas.width = state.render.res === 1080 ? 1920 : 1280; canvas.height = state.render.res === 1080 ? 1080 : 720; }
+            if (canvas) { 
+                if (state.render.res === 2160) {
+                    canvas.width = 3840; canvas.height = 2160;
+                } else if (state.render.res === 1440) {
+                    canvas.width = 2560; canvas.height = 1440;
+                } else if (state.render.res === 1080) {
+                    canvas.width = 1920; canvas.height = 1080;
+                } else {
+                    canvas.width = 1280; canvas.height = 720;
+                }
+            }
         }
 
         let renderWakeLock = null;
@@ -2665,7 +2693,8 @@
             try {
                 statusIndicator.textContent = 'SETUP MESIN RENDER...'; playlistIndicator.textContent = 'Menyiapkan Gabungan Video...';
                 const targetSampleRate = 44100; const numChannels = 2; const targetFPS = state.render.fps;
-                const targetWidth = state.render.res === 1080 ? 1920 : 1280; const targetHeight = state.render.res === 1080 ? 1080 : 720;
+                const targetWidth = state.render.res === 2160 ? 3840 : (state.render.res === 1440 ? 2560 : (state.render.res === 1080 ? 1920 : 1280));
+                const targetHeight = state.render.res === 2160 ? 2160 : (state.render.res === 1440 ? 1440 : (state.render.res === 1080 ? 1080 : 720));
                 
                 let downloadName = 'TNC7_Combined_Playlist.mp4';
                 if (playlist.length > 0 && playlist[0].file) downloadName = playlist[0].file.name.replace(/\.[^/.]+$/, "") + '.mp4';
@@ -2690,23 +2719,27 @@
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addVideoChunk(chunk, meta); hasVideoChunks = true; } catch (e) { abortOfflineRender = true; } }, error: (e) => { abortOfflineRender = true; } });
                 
                 let vConfig = { 
-                    codec: 'avc1.64002A', 
+                    codec: state.render.res >= 2160 ? 'avc1.640034' : (state.render.res >= 1440 ? 'avc1.640032' : 'avc1.64002A'), 
                     width: targetWidth, 
                     height: targetHeight, 
                     bitrate: state.render.targetBitrate, 
                     framerate: targetFPS, 
                     bitrateMode: state.render.bitrateMode, 
-                    hardwareAcceleration: 'no-preference',
+                    hardwareAcceleration: 'prefer-hardware',
                     latencyMode: 'quality'
                 };
                 try {
                     let support = await window.VideoEncoder.isConfigSupported(vConfig);
                     if (!support.supported) {
-                        vConfig.codec = 'avc1.4D402A';
+                        vConfig.codec = 'avc1.64002A';
                         support = await window.VideoEncoder.isConfigSupported(vConfig);
                         if (!support.supported) {
-                            delete vConfig.bitrateMode; 
-                            vConfig.codec = 'avc1.42E02A'; 
+                            vConfig.codec = 'avc1.4D402A';
+                            support = await window.VideoEncoder.isConfigSupported(vConfig);
+                            if (!support.supported) {
+                                delete vConfig.bitrateMode; 
+                                vConfig.codec = 'avc1.42E02A'; 
+                            }
                         }
                     }
                 } catch (err) {
@@ -2735,8 +2768,21 @@
                     document.getElementById('player-title').textContent = file.name; document.getElementById('track-name-display').textContent = file.name;
                     playlistIndicator.textContent = `Lagu ${trackIndex + 1}/${playlist.length}: ${file.name}`; statusIndicator.textContent = 'DEKODE AUDIO...';
 
-                    const arrayBuffer = await file.arrayBuffer(); const decodeCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: targetSampleRate });
-                    const originalAudioBuffer = await decodeCtx.decodeAudioData(arrayBuffer); decodeCtx.close();
+                    let arrayBuffer;
+                    try {
+                        arrayBuffer = await file.arrayBuffer();
+                    } catch(err) {
+                        throw new Error(`File "${file.name}" terlalu besar untuk RAM browser. Saran: Ubah video Anda menjadi MP3.`);
+                    }
+                    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: targetSampleRate });
+                    
+                    let originalAudioBuffer;
+                    try {
+                        originalAudioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
+                    } catch (err) {
+                        throw new Error(`Gagal membaca audio dari "${file.name}". Saran PENTING: Ubah video Anda ke format MP3 untuk Audio Utama, dan masukkan file Video asli ke menu "+ Background".`);
+                    }
+                    decodeCtx.close();
                     
                     const duration = originalAudioBuffer.duration; const trackChannels = originalAudioBuffer.numberOfChannels; const totalFrames = originalAudioBuffer.length; const framesPerChunk = 4096;
                     
@@ -2746,8 +2792,8 @@
                         for (let c = 0; c < numChannels; c++) { let sourceChannel = c < trackChannels ? c : 0; const srcData = originalAudioBuffer.getChannelData(sourceChannel).subarray(offset, offset + currentFrames); data.set(srcData, c * currentFrames); }
                         try { let chunkTimestamp = Math.round((totalAudioSamplesEncoded / targetSampleRate) * 1e6); const audioData = new AudioData({ format: 'f32-planar', sampleRate: targetSampleRate, numberOfFrames: currentFrames, numberOfChannels: numChannels, timestamp: chunkTimestamp, data: data }); audioEncoder.encode(audioData); audioData.close(); } catch(e) { abortOfflineRender = true; }
                         totalAudioSamplesEncoded += currentFrames;
-                        while (audioEncoder.state === 'configured' && audioEncoder.encodeQueueSize >= 50) { await new Promise(r => setTimeout(r, 2)); }
-                        if (offset % (framesPerChunk * 20) === 0) { statusIndicator.textContent = `PROSES AUDIO... ${Math.round((offset/totalFrames)*100)}%`; await new Promise(r => setTimeout(r, 0)); }
+                        while (audioEncoder.state === 'configured' && audioEncoder.encodeQueueSize >= 100) { await new Promise(r => setTimeout(r, 1)); }
+                        if (offset % (framesPerChunk * 40) === 0) { statusIndicator.textContent = `PROSES AUDIO... ${Math.round((offset/totalFrames)*100)}%`; await new Promise(r => setTimeout(r, 0)); }
                     }
 
                     statusIndicator.textContent = 'RENDER VIDEO... 0%';
@@ -2784,7 +2830,7 @@
                             }
                         }
 
-                        if (frameIdx % 30 === 0) {
+                        if (frameIdx % (targetFPS * 2) === 0) {
                             const progress = Math.min(100, Math.round((currentTimeInTrack / duration) * 100));
                             statusIndicator.textContent = `RENDER VIDEO... ${progress}%`;
                             const percent = (currentTimeInTrack / duration) * 100; progressBar.style.width = `${percent}%`; progressHandle.style.left = `${percent}%`;
@@ -2799,7 +2845,7 @@
                             try { videoEncoder.encode(vframe, { keyFrame: isKeyFrame }); } catch (e) { abortOfflineRender = true; }
                             vframe.close(); totalVideoFramesEncoded++;
                         }
-                        while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 2)); }
+                        while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 25) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 1)); }
 
                         frameIdx++; let nextTime = frameIdx * interval;
                         if (nextTime < duration && !abortOfflineRender) {
@@ -2859,11 +2905,27 @@
             document.getElementById('player-title').textContent = playlist[trackIndex].file.name; document.getElementById('track-name-display').textContent = playlist[trackIndex].file.name;
             
             try {
-                const file = playlist[trackIndex].file; const arrayBuffer = await file.arrayBuffer(); indicator.textContent = 'DEKODE AUDIO...';
+                const file = playlist[trackIndex].file; indicator.textContent = 'DEKODE AUDIO...';
+                let arrayBuffer;
+                try {
+                    arrayBuffer = await file.arrayBuffer();
+                } catch(err) {
+                    throw new Error(`File "${file.name}" terlalu besar untuk RAM browser. Saran: Ubah video Anda menjadi MP3.`);
+                }
                 const targetSampleRate = 44100; const decodeCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: targetSampleRate });
-                const originalAudioBuffer = await decodeCtx.decodeAudioData(arrayBuffer); decodeCtx.close();
+                
+                let originalAudioBuffer;
+                try {
+                    originalAudioBuffer = await decodeCtx.decodeAudioData(arrayBuffer);
+                } catch (err) {
+                    throw new Error(`Gagal membaca audio dari "${file.name}". Saran PENTING: Ubah video Anda ke format MP3 untuk Audio Utama, dan masukkan file Video asli ke menu "+ Background".`);
+                }
+                decodeCtx.close();
+
                 const duration = originalAudioBuffer.duration; const numChannels = originalAudioBuffer.numberOfChannels;
-                const targetFPS = state.render.fps; const targetWidth = state.render.res === 1080 ? 1920 : 1280; const targetHeight = state.render.res === 1080 ? 1080 : 720;
+                const targetFPS = state.render.fps; 
+                const targetWidth = state.render.res === 2160 ? 3840 : (state.render.res === 1440 ? 2560 : (state.render.res === 1080 ? 1920 : 1280)); 
+                const targetHeight = state.render.res === 2160 ? 2160 : (state.render.res === 1440 ? 1440 : (state.render.res === 1080 ? 1080 : 720));
 
                 indicator.textContent = 'SETUP MESIN RENDER...';
                 muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: targetWidth, height: targetHeight, frameRate: targetFPS }, audio: { codec: 'aac', sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: "in-memory" });
@@ -2871,23 +2933,27 @@
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { try { muxer.addVideoChunk(chunk, meta); } catch (chunkErr) {} }, error: (e) => { abortOfflineRender = true; } });
                 
                 let vConfigSingle = { 
-                    codec: 'avc1.64002A', 
+                    codec: state.render.res >= 2160 ? 'avc1.640034' : (state.render.res >= 1440 ? 'avc1.640032' : 'avc1.64002A'), 
                     width: targetWidth, 
                     height: targetHeight, 
                     bitrate: state.render.targetBitrate, 
                     framerate: targetFPS, 
                     bitrateMode: state.render.bitrateMode, 
-                    hardwareAcceleration: 'no-preference',
+                    hardwareAcceleration: 'prefer-hardware',
                     latencyMode: 'quality'
                 };
                 try {
                     let support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
                     if (!support.supported) {
-                        vConfigSingle.codec = 'avc1.4D402A';
+                        vConfigSingle.codec = 'avc1.64002A';
                         support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
                         if (!support.supported) {
-                            delete vConfigSingle.bitrateMode; 
-                            vConfigSingle.codec = 'avc1.42E02A'; 
+                            vConfigSingle.codec = 'avc1.4D402A';
+                            support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
+                            if (!support.supported) {
+                                delete vConfigSingle.bitrateMode; 
+                                vConfigSingle.codec = 'avc1.42E02A'; 
+                            }
                         }
                     }
                 } catch (err) {
@@ -2906,8 +2972,8 @@
                         let currentFrames = Math.min(framesPerChunk, totalFrames - offset); const data = new Float32Array(currentFrames * numChannels);
                         for (let c = 0; c < numChannels; c++) { const srcData = audioBuf.getChannelData(c).subarray(offset, offset + currentFrames); data.set(srcData, c * currentFrames); }
                         try { const audioData = new AudioData({ format: 'f32-planar', sampleRate: targetSampleRate, numberOfFrames: currentFrames, numberOfChannels: numChannels, timestamp: Math.round((offset / targetSampleRate) * 1e6), data: data }); enc.encode(audioData); audioData.close(); } catch(e) {}
-                        while (enc.state === 'configured' && enc.encodeQueueSize >= 50) { await new Promise(r => setTimeout(r, 2)); }
-                        if (offset % (framesPerChunk * 20) === 0) { indicator.textContent = `PROSES AUDIO... ${Math.round((offset/totalFrames)*100)}%`; await new Promise(r => setTimeout(r, 0)); }
+                        while (enc.state === 'configured' && enc.encodeQueueSize >= 100) { await new Promise(r => setTimeout(r, 1)); }
+                        if (offset % (framesPerChunk * 40) === 0) { indicator.textContent = `PROSES AUDIO... ${Math.round((offset/totalFrames)*100)}%`; await new Promise(r => setTimeout(r, 0)); }
                     }
                 }
                 
@@ -2946,7 +3012,7 @@
                         if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) { currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length; loadBgImageFromPlaylist(currentImageIndex); lastSlideshowTime = window.offlineCurrentTime; }
                     }
 
-                    if (frameIdx % 30 === 0) {
+                    if (frameIdx % (targetFPS * 2) === 0) {
                         const progress = Math.min(100, Math.round((currentTime / duration) * 100)); indicator.textContent = `RENDER VIDEO... ${progress}%`;
                         const percent = (currentTime / duration) * 100; progressBar.style.width = `${percent}%`; progressHandle.style.left = `${percent}%`; timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`; await new Promise(r => setTimeout(r, 0));
                     }
@@ -2957,7 +3023,7 @@
                         try { videoEncoder.encode(vframe, { keyFrame: isKeyFrame }); } catch (e) { } 
                         vframe.close(); 
                     }
-                    while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 15) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 2)); }
+                    while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 25) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 1)); }
                     
                     frameIdx++; let nextTime = frameIdx * interval;
                     if (nextTime < duration && !abortOfflineRender) {
