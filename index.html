@@ -388,9 +388,9 @@
             <div class="w-px h-4 bg-gray-700 mx-1"></div>
             <button class="btn-custom border-blue-500/50 text-blue-400 hover:bg-blue-500/10" id="btnBukaPresets"><i class="fa-solid fa-layer-group text-xs"></i> Presets</button>
             <div class="w-px h-4 bg-gray-700 mx-1"></div>
-            <button class="btn-custom" onclick="document.getElementById('audioInput').click()"><i class="fa-solid fa-music text-xs"></i> + Audio</button>
-            <input type="file" id="audioInput" accept="audio/*" multiple class="hidden">
-            <button class="btn-custom" id="btnHapusAudio">Hapus Audio</button>
+            <button class="btn-custom" onclick="document.getElementById('audioInput').click()"><i class="fa-solid fa-film text-xs"></i> + Audio/Video</button>
+            <input type="file" id="audioInput" accept="audio/*,video/*" multiple class="hidden">
+            <button class="btn-custom" id="btnHapusAudio">Hapus Media</button>
             <div class="w-px h-4 bg-gray-700 mx-1"></div>
             <!-- UPDATE: Tambahkan dukungan Video MP4/WebM -->
             <button class="btn-custom" onclick="document.getElementById('bgImagePlaylistInput').click()"><i class="fa-solid fa-images text-xs"></i> + Background</button>
@@ -1356,7 +1356,9 @@
         let canvas = document.getElementById('previewCanvas');
         let ctx = canvas.getContext('2d');
         const wrapper = document.getElementById('canvas-wrapper');
-        const audioElement = new Audio();
+        const audioElement = document.createElement('video'); // Diubah agar bisa merender frame MP4
+        audioElement.crossOrigin = "anonymous";
+        audioElement.playsInline = true;
         
         document.querySelectorAll('input[type=range]').forEach(slider => {
             if (slider.hasAttribute('data-no-indicator')) return;
@@ -2552,9 +2554,9 @@
         playlistPanelDOM.addEventListener('dragleave', (e) => { e.preventDefault(); playlistPanelDOM.classList.remove('drag-over'); });
         playlistPanelDOM.addEventListener('drop', (e) => {
             e.preventDefault(); playlistPanelDOM.classList.remove('drag-over');
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('audio/')); if (files.length === 0) return;
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('audio/') || f.type.startsWith('video/')); if (files.length === 0) return;
             files.forEach(file => playlist.push({ file: file }));
-            if (currentTrackIndex === -1 && playlist.length > 0) loadTrack(0); else renderPlaylist(); showNotification(`${files.length} audio ditambahkan`);
+            if (currentTrackIndex === -1 && playlist.length > 0) loadTrack(0); else renderPlaylist(); showNotification(`${files.length} media ditambahkan`);
         });
 
         const canvasWrapperDOM = document.getElementById('canvas-wrapper');
@@ -2694,7 +2696,7 @@
                     bitrate: state.render.targetBitrate, 
                     framerate: targetFPS, 
                     bitrateMode: state.render.bitrateMode, 
-                    hardwareAcceleration: 'prefer-hardware',
+                    hardwareAcceleration: 'no-preference',
                     latencyMode: 'quality'
                 };
                 try {
@@ -2770,6 +2772,11 @@
                             bgPrevElement.currentTime = window.offlineCurrentTime % (bgPrevElement.duration || 1);
                         }
                         
+                        // Sync main video jika track saat ini adalah video
+                        if (audioElement && audioElement.videoWidth > 0) {
+                            audioElement.currentTime = window.offlineCurrentTime % (audioElement.duration || 1);
+                        }
+                        
                         if (state.bg.autoSlideshow && isImagePlaylistActive && imagePlaylist.length > 0) {
                             if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) {
                                 currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length;
@@ -2787,13 +2794,8 @@
                         drawCanvas(); 
                         if (videoEncoder.state === 'configured') {
                             let videoTimestamp = Math.round((totalVideoFramesEncoded / targetFPS) * 1e6);
-                            // Hapus manual colorSpace yang menyebabkan 'crushed blacks' (terlalu gelap) di MP4
-                            // Gunakan alpha: 'discard' agar browser melakukan pemetaan warna sRGB ke YUV secara akurat (1:1)
-                            const vframe = new VideoFrame(canvas, { 
-                                timestamp: videoTimestamp,
-                                alpha: 'discard'
-                            });
-                            let isKeyFrame = (totalVideoFramesEncoded % (targetFPS * 2) === 0);
+                            const vframe = new VideoFrame(canvas, { timestamp: videoTimestamp });
+                            let isKeyFrame = (totalVideoFramesEncoded % targetFPS === 0);
                             try { videoEncoder.encode(vframe, { keyFrame: isKeyFrame }); } catch (e) { abortOfflineRender = true; }
                             vframe.close(); totalVideoFramesEncoded++;
                         }
@@ -2875,7 +2877,7 @@
                     bitrate: state.render.targetBitrate, 
                     framerate: targetFPS, 
                     bitrateMode: state.render.bitrateMode, 
-                    hardwareAcceleration: 'prefer-hardware',
+                    hardwareAcceleration: 'no-preference',
                     latencyMode: 'quality'
                 };
                 try {
@@ -2934,6 +2936,11 @@
                     if (bgPrevElement && bgPrevElement.tagName === 'VIDEO') {
                         bgPrevElement.currentTime = window.offlineCurrentTime % (bgPrevElement.duration || 1);
                     }
+                    
+                    // Sync main video jika track saat ini adalah video
+                    if (audioElement && audioElement.videoWidth > 0) {
+                        audioElement.currentTime = window.offlineCurrentTime % (audioElement.duration || 1);
+                    }
 
                     if (state.bg.autoSlideshow && isImagePlaylistActive && imagePlaylist.length > 0) {
                         if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) { currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length; loadBgImageFromPlaylist(currentImageIndex); lastSlideshowTime = window.offlineCurrentTime; }
@@ -2945,13 +2952,8 @@
                     }
                     drawCanvas(); 
                     if (videoEncoder.state === 'configured') { 
-                        // Hapus manual colorSpace yang menyebabkan 'crushed blacks' (terlalu gelap) di MP4
-                        // Gunakan alpha: 'discard' agar browser melakukan pemetaan warna sRGB ke YUV secara akurat (1:1)
-                        const vframe = new VideoFrame(canvas, { 
-                            timestamp: Math.round(currentTime * 1e6),
-                            alpha: 'discard'
-                        }); 
-                        let isKeyFrame = (frameIdx % (targetFPS * 2) === 0);
+                        const vframe = new VideoFrame(canvas, { timestamp: Math.round(currentTime * 1e6) }); 
+                        let isKeyFrame = (frameIdx % targetFPS === 0);
                         try { videoEncoder.encode(vframe, { keyFrame: isKeyFrame }); } catch (e) { } 
                         vframe.close(); 
                     }
@@ -3113,6 +3115,11 @@
                 // Gambar background baru
                 if (state.bg.imgElement) { drawBgItem(state.bg.imgElement, globalAlphaBG); }
                 
+                if (state.bg.darkness > 0) { ctx.fillStyle = `rgba(0,0,0,${state.bg.darkness})`; ctx.fillRect(0, 0, w, h); }
+            } else if (audioElement && audioElement.videoWidth > 0) {
+                // Gambar video media utama jika tidak ada background kustom yang diatur
+                ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+                drawBgItem(audioElement, 1.0);
                 if (state.bg.darkness > 0) { ctx.fillStyle = `rgba(0,0,0,${state.bg.darkness})`; ctx.fillRect(0, 0, w, h); }
             } else if (state.bg.color !== '#0f1115' && state.bg.color !== 'transparent' && state.bg.color !== '') {
                 if (state.bg.darkness > 0) { ctx.fillStyle = `rgba(0,0,0,${state.bg.darkness})`; ctx.fillRect(0,0,w,h); } else if (state.bg.darkness < 0) { ctx.fillStyle = `rgba(255,255,255,${-state.bg.darkness})`; ctx.fillRect(0,0,w,h); }
