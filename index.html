@@ -13,10 +13,10 @@
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/dc2626/ffffff.png?text=TNC7+PRO">
     
     <!-- Library MP4 Muxer untuk WebCodecs API -->
-    <script src="https://unpkg.com/mp4-muxer/build/mp4-muxer.js"></script>
+    <script src="https://unpkg.com/mp4-muxer@5.2.2/build/mp4-muxer.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;700&family=Righteous&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;700&family=Righteous&family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
     <style>
@@ -170,7 +170,6 @@
         
         input[type=range].hidden + .val-indicator, input[type=range].hidden ~ .reset-slider-btn { display: none !important; }
 
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&family=Digital+Numbers&display=swap');
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
         .shake-anim { animation: shake 0.3s ease-in-out; }
     </style>
@@ -1675,6 +1674,8 @@
         document.getElementById('slideshowIntervalInput').addEventListener('change', (e) => { state.bg.slideshowInterval = parseInt(e.target.value) || 10; });
 
         let audioContext; let audioSource; let realtimeAnalyser; let analyser; let dataArray; let isPlaying = false; let smoothedKick = 0;
+        // Preview dikunci 30 fps; saat render offline, gerakan per-frame diskalakan agar kecepatannya sama di 24/30/60 FPS
+        let frameStep = 1; let weatherSpawnAcc = 0;
         let snowflakes = []; let raindrops = []; let goldDrops = []; let lightnings = []; let smokes = []; let progressBarSparks = []; let PI2 = Math.PI * 2;
         let playlist = []; let currentTrackIndex = -1; let typewriterProgress = 0; let lastTrackForText = ""; let textTransitionStart = 0;
 
@@ -2635,7 +2636,11 @@
         document.getElementById('btnRekam').addEventListener('click', async function() {
             if(!isRecording) {
                 if (playlist.length === 0) { showNotification("Harap tambahkan Audio terlebih dahulu!"); return; }
+                exportDirectoryHandle = null;
                 if (window.showDirectoryPicker) { try { exportDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite', id: 'tnc7_export_folder' }); } catch (err) { console.warn("Pemilihan folder dibatalkan"); } }
+                if (!exportDirectoryHandle && state.render.method === 'gabung' && playlist.length > 1) {
+                    if (!confirm("Tanpa folder tujuan, seluruh video gabungan ditahan di RAM browser dan bisa crash untuk playlist panjang.\n\nPilih folder (Chrome/Edge) agar video ditulis langsung ke disk.\n\nTetap lanjut tanpa folder?")) return;
+                }
                 isPlaying = false; if(audioElement) audioElement.pause(); updatePlayBtn();
                 if (state.render.method === 'gabung') startCombinedRenderProcess(); else startBatchRenderProcess();
             } else { abortOfflineRender = true; isRenderingPlaylist = false; }
@@ -2670,8 +2675,90 @@
         async function enableAntiThrottling() { try { if ('wakeLock' in navigator) renderWakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
         function disableAntiThrottling() { if (renderWakeLock !== null) { renderWakeLock.release().then(() => { renderWakeLock = null; }); } }
 
+        let renderErrorMsg = null; let renderWritable = null; let renderWritableName = null;
+
+        // Seek video & TUNGGU frame-nya siap sebelum digambar (tanpa ini hasil render tersendat/beku)
+        function seekMediaForRender(el, t) {
+            if (!el || el.tagName !== 'VIDEO') return Promise.resolve();
+            const dur = el.duration;
+            if (!isFinite(dur) || dur <= 0) return Promise.resolve();
+            if (!el.paused) el.pause();
+            const target = t % dur;
+            if (Math.abs(el.currentTime - target) < 0.0005 && !el.seeking) return Promise.resolve();
+            return new Promise(resolve => {
+                let done = false; const finish = () => { if (done) return; done = true; el.removeEventListener('seeked', finish); clearTimeout(timer); resolve(); };
+                const timer = setTimeout(finish, 1000);
+                el.addEventListener('seeked', finish);
+                try { el.currentTime = target; } catch (e) { finish(); }
+            });
+        }
+        async function syncRenderMedia(t) {
+            const jobs = [];
+            if (state.overlay.type === 'video' && state.overlay.element) jobs.push(seekMediaForRender(state.overlay.element, t));
+            if (state.bg.imgElement) jobs.push(seekMediaForRender(state.bg.imgElement, t));
+            if (bgPrevElement && bgPrevElement !== state.bg.imgElement) jobs.push(seekMediaForRender(bgPrevElement, t));
+            if (audioElement && audioElement.videoWidth > 0) jobs.push(seekMediaForRender(audioElement, t));
+            await Promise.all(jobs);
+        }
+        function resumeRenderMediaPlayback() {
+            [state.overlay.type === 'video' ? state.overlay.element : null, state.bg.imgElement, bgPrevElement].forEach(el => {
+                if (el && el.tagName === 'VIDEO' && el.paused && el.loop) el.play().catch(() => {});
+            });
+        }
+        // Muat file lagu yang sedang dirender ke elemen media utama, supaya track video tampil sesuai lagunya
+        function loadRenderMainMedia(file) {
+            return new Promise(resolve => {
+                if (!audioElement || !file) return resolve();
+                audioElement.pause();
+                if (audioElement.src && audioElement.src.startsWith('blob:')) URL.revokeObjectURL(audioElement.src);
+                let done = false; const finish = () => { if (done) return; done = true; clearTimeout(timer); resolve(); };
+                const timer = setTimeout(finish, 5000);
+                audioElement.addEventListener('loadeddata', finish, { once: true });
+                audioElement.addEventListener('error', finish, { once: true });
+                audioElement.src = URL.createObjectURL(file);
+            });
+        }
+        // File 5.1/multi-channel di-downmix ke stereo (Web Audio memasukkan kanal center/vokal), bukan sekadar ambil L/R
+        async function toRenderChannels(buf) {
+            if (buf.numberOfChannels <= 2) return buf;
+            const mixCtx = new OfflineAudioContext(2, buf.length, buf.sampleRate);
+            const s = mixCtx.createBufferSource(); s.buffer = buf; s.connect(mixCtx.destination); s.start(0);
+            return await mixCtx.startRendering();
+        }
+
+        // Pilih config encoder yang BENAR-BENAR jalan: isConfigSupported bisa 'true' untuk prefer-hardware
+        // padahal pembuatan encoder gagal (PC tanpa encoder H.264 hardware). Uji 1 frame, lalu jatuh ke software.
+        // AAC tidak tersedia di semua browser (mis. Chromium/Linux); jatuh ke Opus-dalam-MP4 daripada render gagal
+        async function pickAudioCodec(sampleRate, numberOfChannels) {
+            for (const c of [{ enc: 'mp4a.40.2', mux: 'aac' }, { enc: 'opus', mux: 'opus' }]) {
+                try { if ((await AudioEncoder.isConfigSupported({ codec: c.enc, sampleRate, numberOfChannels, bitrate: 128000 })).supported) return c; } catch (e) {}
+            }
+            throw new Error('Browser ini tidak mendukung encoder audio AAC/Opus');
+        }
+
+        async function pickVideoEncoderConfig(base) {
+            const codecs = [base.codec, 'avc1.64002A', 'avc1.4D402A', 'avc1.42E02A'].filter((c, i, a) => a.indexOf(c) === i);
+            const tries = [];
+            for (const hw of ['prefer-hardware', 'no-preference']) for (const codec of codecs) { tries.push({ ...base, codec, hardwareAcceleration: hw }); const nb = { ...base, codec, hardwareAcceleration: hw }; delete nb.bitrateMode; tries.push(nb); }
+            for (const cfg of tries) {
+                try { const sup = await VideoEncoder.isConfigSupported(cfg); if (!sup.supported) continue; } catch (e) { continue; }
+                let ok = false, gotOutput = false;
+                const probe = new VideoEncoder({ output: () => { gotOutput = true; }, error: () => { ok = false; } });
+                try {
+                    probe.configure(cfg);
+                    const c = (typeof OffscreenCanvas !== 'undefined') ? new OffscreenCanvas(cfg.width, cfg.height) : Object.assign(document.createElement('canvas'), { width: cfg.width, height: cfg.height });
+                    c.getContext('2d').fillRect(0, 0, 1, 1);
+                    const f = new VideoFrame(c, { timestamp: 0 }); probe.encode(f, { keyFrame: true }); f.close();
+                    await probe.flush(); ok = gotOutput;
+                } catch (e) { ok = false; }
+                try { if (probe.state !== 'closed') probe.close(); } catch (e) {}
+                if (ok) return cfg;
+            }
+            throw new Error('Browser ini tidak bisa meng-encode H.264 di resolusi ini');
+        }
+
         async function startBatchRenderProcess() {
-            isRenderingPlaylist = true; renderQueueIndex = 0; abortOfflineRender = false; await enableAntiThrottling();
+            isRenderingPlaylist = true; renderQueueIndex = 0; abortOfflineRender = false; renderErrorMsg = null; await enableAntiThrottling();
             const btn = document.getElementById('btnRekam'); btn.textContent = 'Batal Semua Render'; btn.classList.remove('btn-danger'); btn.classList.add('bg-red-600', 'text-white', 'border-red-500');
             const indicator = document.getElementById('recording-indicator'); indicator.classList.remove('hidden');
             while (renderQueueIndex < playlist.length && !abortOfflineRender && isRenderingPlaylist) { await renderSingleTrack(renderQueueIndex); renderQueueIndex++; }
@@ -2679,7 +2766,7 @@
         }
 
         async function startCombinedRenderProcess() {
-            isRenderingPlaylist = true; abortOfflineRender = false; await enableAntiThrottling();
+            isRenderingPlaylist = true; abortOfflineRender = false; renderErrorMsg = null; await enableAntiThrottling();
             const btn = document.getElementById('btnRekam'); btn.textContent = 'Batal Semua Render'; btn.classList.remove('btn-danger'); btn.classList.add('bg-red-600', 'text-white', 'border-red-500');
             const indicator = document.getElementById('recording-indicator'); indicator.classList.remove('hidden');
             
@@ -2706,17 +2793,19 @@
                         while (true) { try { await exportDirectoryHandle.getFileHandle(currentName); currentName = downloadName.replace('.mp4', ` (${fileCounter}).mp4`); fileCounter++; } catch (e) { break; } }
                         downloadName = currentName; const fileHandle = await exportDirectoryHandle.getFileHandle(downloadName, { create: true });
                         writableStream = await fileHandle.createWritable(); streamTarget = new Mp4Muxer.FileSystemWritableFileStreamTarget(writableStream);
-                    } catch (err) {}
+                    } catch (err) { streamTarget = null; writableStream = null; }
                 }
+                renderWritable = writableStream; renderWritableName = writableStream ? downloadName : null;
                 if (!streamTarget) streamTarget = new Mp4Muxer.ArrayBufferTarget();
 
+                const audioPick = await pickAudioCodec(targetSampleRate, numChannels);
                 muxer = new Mp4Muxer.Muxer({
                     target: streamTarget, video: { codec: 'avc', width: targetWidth, height: targetHeight, frameRate: targetFPS },
-                    audio: { codec: 'aac', sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: false 
+                    audio: { codec: audioPick.mux, sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: false 
                 });
 
                 let hasVideoChunks = false;
-                videoEncoder = new VideoEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addVideoChunk(chunk, meta); hasVideoChunks = true; } catch (e) { abortOfflineRender = true; } }, error: (e) => { abortOfflineRender = true; } });
+                videoEncoder = new VideoEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addVideoChunk(chunk, meta); hasVideoChunks = true; } catch (e) { renderErrorMsg = renderErrorMsg || ('Muxer video: ' + e.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder video: ' + e.message); abortOfflineRender = true; } });
                 
                 let vConfig = { 
                     codec: state.render.res >= 2160 ? 'avc1.640034' : (state.render.res >= 1440 ? 'avc1.640032' : 'avc1.64002A'), 
@@ -2728,28 +2817,11 @@
                     hardwareAcceleration: 'prefer-hardware',
                     latencyMode: 'quality'
                 };
-                try {
-                    let support = await window.VideoEncoder.isConfigSupported(vConfig);
-                    if (!support.supported) {
-                        vConfig.codec = 'avc1.64002A';
-                        support = await window.VideoEncoder.isConfigSupported(vConfig);
-                        if (!support.supported) {
-                            vConfig.codec = 'avc1.4D402A';
-                            support = await window.VideoEncoder.isConfigSupported(vConfig);
-                            if (!support.supported) {
-                                delete vConfig.bitrateMode; 
-                                vConfig.codec = 'avc1.42E02A'; 
-                            }
-                        }
-                    }
-                } catch (err) {
-                    delete vConfig.bitrateMode;
-                    vConfig.codec = 'avc1.42E02A';
-                }
+                vConfig = await pickVideoEncoderConfig(vConfig);
                 videoEncoder.configure(vConfig);
 
-                audioEncoder = new AudioEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addAudioChunk(chunk, meta); } catch(e) { abortOfflineRender = true; } }, error: (e) => { abortOfflineRender = true; } });
-                audioEncoder.configure({ codec: 'mp4a.40.2', sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
+                audioEncoder = new AudioEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addAudioChunk(chunk, meta); } catch(e) { renderErrorMsg = renderErrorMsg || ('Muxer audio: ' + e.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder audio: ' + e.message); abortOfflineRender = true; } });
+                audioEncoder.configure({ codec: audioPick.enc, sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
 
                 if (typeof OffscreenCanvas !== 'undefined') { canvas = new OffscreenCanvas(targetWidth, targetHeight); } else { canvas = document.createElement('canvas'); canvas.width = targetWidth; canvas.height = targetHeight; }
                 ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
@@ -2783,7 +2855,9 @@
                         throw new Error(`Gagal membaca audio dari "${file.name}". Saran PENTING: Ubah video Anda ke format MP3 untuk Audio Utama, dan masukkan file Video asli ke menu "+ Background".`);
                     }
                     decodeCtx.close();
-                    
+                    originalAudioBuffer = await toRenderChannels(originalAudioBuffer);
+                    await loadRenderMainMedia(file);
+
                     const duration = originalAudioBuffer.duration; const trackChannels = originalAudioBuffer.numberOfChannels; const totalFrames = originalAudioBuffer.length; const framesPerChunk = 4096;
                     
                     for (let offset = 0; offset < totalFrames; offset += framesPerChunk) {
@@ -2802,27 +2876,14 @@
                     source.connect(analyser); analyser.connect(offlineCtx.destination); source.start(0);
 
                     const interval = 1 / targetFPS; forceGarbageCollection(); let frameIdx = 0; lastSlideshowTime = 0;
+                    // Jumlah frame lagu ini dihitung dari timeline audio kumulatif, supaya video tidak makin melenceh dari audio di playlist panjang
+                    const trackFrameCount = Math.max(1, Math.round((totalAudioSamplesEncoded / targetSampleRate) * targetFPS) - totalVideoFramesEncoded);
                     let processFrameResolve; let processFramePromise = new Promise(resolve => { processFrameResolve = resolve; });
 
                     const handleSuspend = async () => {
                         if (abortOfflineRender) { processFrameResolve(); return; }
                         let currentTimeInTrack = frameIdx * interval; window.offlineCurrentTime = currentTimeInTrack; analyser.getByteFrequencyData(dataArray);
 
-                        if (state.overlay.type === 'video' && state.overlay.element) state.overlay.element.currentTime = window.offlineCurrentTime % state.overlay.element.duration;
-                        
-                        // UPDATE: Sync Waktu Background Video Saat Render Offline
-                        if (state.bg.imgElement && state.bg.imgElement.tagName === 'VIDEO') {
-                            state.bg.imgElement.currentTime = window.offlineCurrentTime % (state.bg.imgElement.duration || 1);
-                        }
-                        if (bgPrevElement && bgPrevElement.tagName === 'VIDEO') {
-                            bgPrevElement.currentTime = window.offlineCurrentTime % (bgPrevElement.duration || 1);
-                        }
-                        
-                        // Sync main video jika track saat ini adalah video
-                        if (audioElement && audioElement.videoWidth > 0) {
-                            audioElement.currentTime = window.offlineCurrentTime % (audioElement.duration || 1);
-                        }
-                        
                         if (state.bg.autoSlideshow && isImagePlaylistActive && imagePlaylist.length > 0) {
                             if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) {
                                 currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length;
@@ -2837,7 +2898,8 @@
                             timeDisplay.textContent = `${formatTime(currentTimeInTrack)} / ${formatTime(duration)}`; await new Promise(r => setTimeout(r, 0));
                         }
 
-                        drawCanvas(); 
+                        await syncRenderMedia(window.offlineCurrentTime);
+                        drawCanvas();
                         if (videoEncoder.state === 'configured') {
                             let videoTimestamp = Math.round((totalVideoFramesEncoded / targetFPS) * 1e6);
                             const vframe = new VideoFrame(canvas, { timestamp: videoTimestamp });
@@ -2848,25 +2910,27 @@
                         while (videoEncoder.state === 'configured' && videoEncoder.encodeQueueSize >= 25) { if (abortOfflineRender) break; await new Promise(r => setTimeout(r, 1)); }
 
                         frameIdx++; let nextTime = frameIdx * interval;
-                        if (nextTime < duration && !abortOfflineRender) {
-                            let safeSuspendTime = nextTime; const minAdvance = 128 / targetSampleRate;
-                            if (safeSuspendTime <= offlineCtx.currentTime + minAdvance) safeSuspendTime = offlineCtx.currentTime + minAdvance * 2;
-                            try { offlineCtx.suspend(safeSuspendTime).then(handleSuspend).catch(e => processFrameResolve()); offlineCtx.resume(); } catch(e) { processFrameResolve(); }
-                        } else { processFrameResolve(); }
+                        if (frameIdx < trackFrameCount && !abortOfflineRender) {
+                            if (nextTime < duration) {
+                                let safeSuspendTime = nextTime; const minAdvance = 128 / targetSampleRate;
+                                if (safeSuspendTime <= offlineCtx.currentTime + minAdvance) safeSuspendTime = offlineCtx.currentTime + minAdvance * 2;
+                                try { offlineCtx.suspend(safeSuspendTime).then(handleSuspend).catch(e => processFrameResolve()); offlineCtx.resume(); } catch(e) { processFrameResolve(); }
+                            } else { handleSuspend(); } // frame penutup (< 1 frame) setelah audio lagu habis
+                        } else { processFrameResolve(); try { offlineCtx.resume(); } catch(e) {} }
                     };
 
                     try { offlineCtx.suspend(0).then(handleSuspend).catch(e => processFrameResolve()); offlineCtx.startRendering().then(() => processFrameResolve()).catch(err => processFrameResolve()); } catch(e) { processFrameResolve(); }
                     await processFramePromise;
                 }
 
-                if (abortOfflineRender) throw new Error("Render dibatalkan");
+                if (abortOfflineRender) throw new Error(renderErrorMsg ? `${renderErrorMsg}. Coba turunkan resolusi/bitrate.` : "Render dibatalkan");
                 if (!hasVideoChunks) throw new Error("Gagal mengenkode video.");
 
                 statusIndicator.textContent = 'FINISHING...'; playlistIndicator.textContent = 'Menyimpan Video Gabungan...';
                 try { await videoEncoder.flush(); } catch (flushErr) {} try { await audioEncoder.flush(); } catch (flushErr) {}
                 if (videoEncoder.state !== 'closed') videoEncoder.close(); if (audioEncoder.state !== 'closed') audioEncoder.close();
                 try { muxer.finalize(); } catch (finalizeErr) {}
-                if (writableStream) { try { await writableStream.close(); } catch(e){} }
+                if (writableStream) { try { await writableStream.close(); renderWritable = null; } catch(e){ throw new Error(`Gagal menyimpan ${downloadName}: ${e.message}`); } }
                 
                 if (streamTarget instanceof Mp4Muxer.FileSystemWritableFileStreamTarget) {
                     statusIndicator.textContent = `Tersimpan: ${downloadName}`; await new Promise(r => setTimeout(r, 800));
@@ -2884,9 +2948,10 @@
                     statusIndicator.textContent = 'GAGAL RENDER'; playlistIndicator.textContent = `Error: ${err.message}`; showNotification(`Gagal merender gabungan: ${err.message}`); await new Promise(r => setTimeout(r, 4000));
                 }
             } finally {
-                canvas = originalCanvas; ctx = originalCtx; resizeCanvas();
+                canvas = originalCanvas; ctx = originalCtx; resizeCanvas(); resumeRenderMediaPlayback();
                 if (videoEncoder && videoEncoder.state !== 'closed') { try { videoEncoder.close(); } catch(e){} }
                 if (audioEncoder && audioEncoder.state !== 'closed') { try { audioEncoder.close(); } catch(e){} }
+                if (renderWritable) { try { await renderWritable.abort(); } catch(e){} renderWritable = null; if (exportDirectoryHandle && renderWritableName) { try { await exportDirectoryHandle.removeEntry(renderWritableName); } catch(e){} } }
                 muxer = null; cleanupRecordingState();
             }
         }
@@ -2921,6 +2986,8 @@
                     throw new Error(`Gagal membaca audio dari "${file.name}". Saran PENTING: Ubah video Anda ke format MP3 untuk Audio Utama, dan masukkan file Video asli ke menu "+ Background".`);
                 }
                 decodeCtx.close();
+                originalAudioBuffer = await toRenderChannels(originalAudioBuffer);
+                await loadRenderMainMedia(file);
 
                 const duration = originalAudioBuffer.duration; const numChannels = originalAudioBuffer.numberOfChannels;
                 const targetFPS = state.render.fps; 
@@ -2928,9 +2995,21 @@
                 const targetHeight = state.render.res === 2160 ? 2160 : (state.render.res === 1440 ? 1440 : (state.render.res === 1080 ? 1080 : 720));
 
                 indicator.textContent = 'SETUP MESIN RENDER...';
-                muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: targetWidth, height: targetHeight, frameRate: targetFPS }, audio: { codec: 'aac', sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: "in-memory" });
+                let downloadNameBase = playlist[trackIndex].file.name.replace(/\.[^/.]+$/, ""); let downloadName = downloadNameBase + '.mp4';
+                let streamTarget = null; let writableStream = null;
+                if (exportDirectoryHandle) {
+                    try {
+                        let fileCounter = 1; let currentName = downloadName;
+                        while (true) { try { await exportDirectoryHandle.getFileHandle(currentName); currentName = `${downloadNameBase} (${fileCounter}).mp4`; fileCounter++; } catch (e) { break; } }
+                        downloadName = currentName; const fileHandle = await exportDirectoryHandle.getFileHandle(downloadName, { create: true });
+                        writableStream = await fileHandle.createWritable(); streamTarget = new Mp4Muxer.FileSystemWritableFileStreamTarget(writableStream);
+                    } catch (err) { streamTarget = null; writableStream = null; }
+                }
+                const audioPick = await pickAudioCodec(targetSampleRate, numChannels);
+                muxer = new Mp4Muxer.Muxer({ target: streamTarget || new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: targetWidth, height: targetHeight, frameRate: targetFPS }, audio: { codec: audioPick.mux, sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: streamTarget ? false : "in-memory" });
+                renderWritable = writableStream; renderWritableName = writableStream ? downloadName : null;
 
-                videoEncoder = new VideoEncoder({ output: (chunk, meta) => { try { muxer.addVideoChunk(chunk, meta); } catch (chunkErr) {} }, error: (e) => { abortOfflineRender = true; } });
+                videoEncoder = new VideoEncoder({ output: (chunk, meta) => { try { muxer.addVideoChunk(chunk, meta); } catch (chunkErr) { renderErrorMsg = renderErrorMsg || ('Muxer video: ' + chunkErr.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder video: ' + e.message); abortOfflineRender = true; } });
                 
                 let vConfigSingle = { 
                     codec: state.render.res >= 2160 ? 'avc1.640034' : (state.render.res >= 1440 ? 'avc1.640032' : 'avc1.64002A'), 
@@ -2942,28 +3021,11 @@
                     hardwareAcceleration: 'prefer-hardware',
                     latencyMode: 'quality'
                 };
-                try {
-                    let support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
-                    if (!support.supported) {
-                        vConfigSingle.codec = 'avc1.64002A';
-                        support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
-                        if (!support.supported) {
-                            vConfigSingle.codec = 'avc1.4D402A';
-                            support = await window.VideoEncoder.isConfigSupported(vConfigSingle);
-                            if (!support.supported) {
-                                delete vConfigSingle.bitrateMode; 
-                                vConfigSingle.codec = 'avc1.42E02A'; 
-                            }
-                        }
-                    }
-                } catch (err) {
-                    delete vConfigSingle.bitrateMode;
-                    vConfigSingle.codec = 'avc1.42E02A';
-                }
+                vConfigSingle = await pickVideoEncoderConfig(vConfigSingle);
                 videoEncoder.configure(vConfigSingle);
 
-                audioEncoder = new AudioEncoder({ output: (chunk, meta) => { try { muxer.addAudioChunk(chunk, meta); } catch(e) {} }, error: (e) => { abortOfflineRender = true; } });
-                audioEncoder.configure({ codec: 'mp4a.40.2', sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
+                audioEncoder = new AudioEncoder({ output: (chunk, meta) => { try { muxer.addAudioChunk(chunk, meta); } catch(e) { renderErrorMsg = renderErrorMsg || ('Muxer audio: ' + e.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder audio: ' + e.message); abortOfflineRender = true; } });
+                audioEncoder.configure({ codec: audioPick.enc, sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
                 
                 async function processAudio(audioBuf, enc) {
                     const totalFrames = audioBuf.length; const framesPerChunk = 4096; 
@@ -2993,21 +3055,6 @@
                     if (abortOfflineRender) { processFrameResolve(); return; }
                     let currentTime = frameIdx * interval; window.offlineCurrentTime = currentTime; analyser.getByteFrequencyData(dataArray);
 
-                    if (state.overlay.type === 'video' && state.overlay.element) state.overlay.element.currentTime = window.offlineCurrentTime % state.overlay.element.duration;
-                    
-                    // UPDATE: Sync Waktu Background Video Saat Render Offline
-                    if (state.bg.imgElement && state.bg.imgElement.tagName === 'VIDEO') {
-                        state.bg.imgElement.currentTime = window.offlineCurrentTime % (state.bg.imgElement.duration || 1);
-                    }
-                    if (bgPrevElement && bgPrevElement.tagName === 'VIDEO') {
-                        bgPrevElement.currentTime = window.offlineCurrentTime % (bgPrevElement.duration || 1);
-                    }
-                    
-                    // Sync main video jika track saat ini adalah video
-                    if (audioElement && audioElement.videoWidth > 0) {
-                        audioElement.currentTime = window.offlineCurrentTime % (audioElement.duration || 1);
-                    }
-
                     if (state.bg.autoSlideshow && isImagePlaylistActive && imagePlaylist.length > 0) {
                         if (window.offlineCurrentTime - lastSlideshowTime >= state.bg.slideshowInterval) { currentImageIndex = (currentImageIndex + 1) % imagePlaylist.length; loadBgImageFromPlaylist(currentImageIndex); lastSlideshowTime = window.offlineCurrentTime; }
                     }
@@ -3016,8 +3063,9 @@
                         const progress = Math.min(100, Math.round((currentTime / duration) * 100)); indicator.textContent = `RENDER VIDEO... ${progress}%`;
                         const percent = (currentTime / duration) * 100; progressBar.style.width = `${percent}%`; progressHandle.style.left = `${percent}%`; timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`; await new Promise(r => setTimeout(r, 0));
                     }
-                    drawCanvas(); 
-                    if (videoEncoder.state === 'configured') { 
+                    await syncRenderMedia(window.offlineCurrentTime);
+                    drawCanvas();
+                    if (videoEncoder.state === 'configured') {
                         const vframe = new VideoFrame(canvas, { timestamp: Math.round(currentTime * 1e6) }); 
                         let isKeyFrame = (frameIdx % targetFPS === 0);
                         try { videoEncoder.encode(vframe, { keyFrame: isKeyFrame }); } catch (e) { } 
@@ -3030,31 +3078,25 @@
                         let safeSuspendTime = nextTime; const minAdvance = 128 / targetSampleRate;
                         if (safeSuspendTime <= offlineCtx.currentTime + minAdvance) { safeSuspendTime = offlineCtx.currentTime + minAdvance * 2; }
                         try { offlineCtx.suspend(safeSuspendTime).then(handleSuspend).catch(e => { processFrameResolve(); }); offlineCtx.resume(); } catch(e) { processFrameResolve(); }
-                    } else { processFrameResolve(); }
+                    } else { processFrameResolve(); try { offlineCtx.resume(); } catch(e) {} }
                 };
 
                 try { offlineCtx.suspend(0).then(handleSuspend).catch(e => { processFrameResolve(); }); offlineCtx.startRendering().then(() => { processFrameResolve(); }).catch(err => { processFrameResolve(); }); } catch(e) { processFrameResolve(); }
                 await processFramePromise;
 
-                if (abortOfflineRender) return;
+                if (abortOfflineRender) { if (renderErrorMsg) throw new Error(`${renderErrorMsg}. Coba turunkan resolusi/bitrate.`); return; }
                 indicator.textContent = 'FINISHING...';
                 try { await videoEncoder.flush(); } catch (flushErr) {} try { await audioEncoder.flush(); } catch (flushErr) {}
                 if (videoEncoder.state !== 'closed') videoEncoder.close(); if (audioEncoder.state !== 'closed') audioEncoder.close();
                 try { muxer.finalize(); } catch (finalizeErr) {}
-                
-                const blob = new Blob([muxer.target.buffer], { type: 'video/mp4' }); muxer = null;
-                let downloadNameBase = playlist[trackIndex].file.name.replace(/\.[^/.]+$/, ""); let downloadName = downloadNameBase + '.mp4'; let saveSuccess = false;
-                
-                if (exportDirectoryHandle) {
-                    try {
-                        let fileCounter = 1; let currentName = downloadName; let fileHandle = null;
-                        while (true) { try { await exportDirectoryHandle.getFileHandle(currentName); currentName = `${downloadNameBase} (${fileCounter}).mp4`; fileCounter++; } catch (e) { break; } }
-                        downloadName = currentName; fileHandle = await exportDirectoryHandle.getFileHandle(downloadName, { create: true });
-                        const writable = await fileHandle.createWritable(); await writable.write(blob); await writable.close();
-                        saveSuccess = true; indicator.textContent = `Tersimpan: ${downloadName}`; await new Promise(r => setTimeout(r, 800));
-                    } catch (err) {}
+                let saveSuccess = false; let blob = null;
+                if (writableStream) {
+                    try { await writableStream.close(); renderWritable = null; saveSuccess = true; indicator.textContent = `Tersimpan: ${downloadName}`; await new Promise(r => setTimeout(r, 800)); } catch (err) { throw new Error(`Gagal menyimpan ${downloadName}: ${err.message}`); }
+                } else {
+                    blob = new Blob([muxer.target.buffer], { type: 'video/mp4' });
                 }
-                
+                muxer = null;
+
                 if (!saveSuccess && blob && blob.size > 1024) {
                     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = downloadName; document.body.appendChild(a); a.click();
                     setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); await new Promise(r => setTimeout(r, 1000));
@@ -3065,7 +3107,8 @@
                 if (err.message !== "Render dibatalkan pengguna" && err.message !== "Render dibatalkan") { indicator.textContent = 'GAGAL RENDER'; playlistIndicator.textContent = `Error: ${err.message}`; showNotification(`Gagal merender lagu: ${err.message}`); await new Promise(r => setTimeout(r, 4000)); }
                 abortOfflineRender = true;
             } finally {
-                canvas = originalCanvas; ctx = originalCtx; resizeCanvas();
+                canvas = originalCanvas; ctx = originalCtx; resizeCanvas(); resumeRenderMediaPlayback();
+                if (renderWritable) { try { await renderWritable.abort(); } catch(e){} renderWritable = null; if (exportDirectoryHandle && renderWritableName) { try { await exportDirectoryHandle.removeEntry(renderWritableName); } catch(e){} } }
                 if (videoEncoder && videoEncoder.state !== 'closed') { try { videoEncoder.close(); } catch(e){} }
                 if (audioEncoder && audioEncoder.state !== 'closed') { try { audioEncoder.close(); } catch(e){} }
                 muxer = null;
@@ -3112,6 +3155,8 @@
 
         function drawCanvas() {
             if(!ctx || !canvas.width) return;
+            frameStep = isOfflineRendering ? 30 / (state.render.fps || 30) : 1;
+            weatherSpawnAcc += frameStep; const spawnTicks = Math.floor(weatherSpawnAcc); weatherSpawnAcc -= spawnTicks;
             
             ctx.save();
             const scaleX = canvas.width / 1280;
@@ -3129,8 +3174,8 @@
                 let bgSum = dataArray[0] + dataArray[1] + dataArray[2] + dataArray[3] + dataArray[4] + dataArray[5] + dataArray[6] + dataArray[7] + dataArray[8] + dataArray[9] + dataArray[10] + dataArray[11] + dataArray[12] + dataArray[13] + dataArray[14]; 
                 let bgAvg = bgSum * 0.0002614379; bgAudioReactivity = Math.pow(bgAvg, 1.2);
                 let kickBassAvg = (dataArray[0] + dataArray[1] + dataArray[2]) / (3 * 255); let rawKick = Math.pow(kickBassAvg, 3.0) * 1.5; 
-                smoothedKick = Math.max(rawKick, smoothedKick * 0.5); kickBassReactivity = smoothedKick;
-            } else { smoothedKick *= 0.5; kickBassReactivity = smoothedKick; }
+                smoothedKick = Math.max(rawKick, smoothedKick * Math.pow(0.5, frameStep)); kickBassReactivity = smoothedKick;
+            } else { smoothedKick *= Math.pow(0.5, frameStep); kickBassReactivity = smoothedKick; }
 
             if (state.bg.beatDropFx && kickBassReactivity > 0.8 && lastKickDrop < 0.6) { beatDropFlashAlpha = 1.0; }
             lastKickDrop = kickBassReactivity;
@@ -3194,7 +3239,7 @@
             if (beatDropFlashAlpha > 0) {
                 ctx.fillStyle = `rgba(255,255,255,${beatDropFlashAlpha})`;
                 ctx.fillRect(0, 0, w, h);
-                beatDropFlashAlpha -= 0.05 * (60 / state.render.fps);
+                beatDropFlashAlpha -= 0.1 * frameStep;
             }
 
             ctx.imageSmoothingEnabled = false; 
@@ -3211,13 +3256,13 @@
                     activeInt = int + (boost * ((int / 50) * 150));
                     finalSpd = finalSpd * (1 + boost * ((spd / 50) * 2.5));
                 }
-                return { int: activeInt, spd: finalSpd };
+                return { int: activeInt, spd: finalSpd * frameStep };
             };
 
             if (state.bg.weather.includes('salju')) {
                 let wp = getWProps('salju');
                 let currentMaxSnow = wp.int * 4; let spawnChance = 0.9 - (wp.int / 150);
-                if (snowflakes.length < currentMaxSnow && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 20); for(let k=0; k<spawnCount; k++) { if (snowflakes.length >= currentMaxSnow) break; snowflakes.push({ x: Math.random() * w, y: -10, r: Math.random() * 2 + 0.5, s: Math.random() * 1.5 + 0.5, vx: (Math.random() - 0.5) * 0.5, o: Math.random() * 0.5 + 0.2 }); } }
+                for (let t = 0; t < spawnTicks; t++) if (snowflakes.length < currentMaxSnow && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 20); for(let k=0; k<spawnCount; k++) { if (snowflakes.length >= currentMaxSnow) break; snowflakes.push({ x: Math.random() * w, y: -10, r: Math.random() * 2 + 0.5, s: Math.random() * 1.5 + 0.5, vx: (Math.random() - 0.5) * 0.5, o: Math.random() * 0.5 + 0.2 }); } }
                 ctx.fillStyle = '#ffffff';
                 for (let i = snowflakes.length - 1; i >= 0; i--) { let p = snowflakes[i]; p.y += p.s * wp.spd; p.x += p.vx * wp.spd; ctx.globalAlpha = p.o; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, PI2); ctx.fill(); if (p.y > h || p.x < 0 || p.x > w) snowflakes.splice(i, 1); }
                 ctx.globalAlpha = 1.0;
@@ -3225,7 +3270,7 @@
             if (state.bg.weather.includes('hujan_air')) {
                 let wp = getWProps('hujan_air');
                 let currentMaxRain = wp.int * 6; let spawnChance = 0.8 - (wp.int / 200);
-                if (raindrops.length < currentMaxRain && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 10); for(let k=0; k<spawnCount; k++) { if (raindrops.length >= currentMaxRain) break; raindrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 20 + 10, s: Math.random() * 10 + 15, o: Math.random() * 0.3 + 0.2 }); } }
+                for (let t = 0; t < spawnTicks; t++) if (raindrops.length < currentMaxRain && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 10); for(let k=0; k<spawnCount; k++) { if (raindrops.length >= currentMaxRain) break; raindrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 20 + 10, s: Math.random() * 10 + 15, o: Math.random() * 0.3 + 0.2 }); } }
                 ctx.strokeStyle = '#a0aec0'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
                 for (let i = raindrops.length - 1; i >= 0; i--) { let p = raindrops[i]; p.y += p.s * wp.spd; ctx.globalAlpha = p.o; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - (p.s * 0.1), p.y + p.len); ctx.stroke(); if (p.y > h) raindrops.splice(i, 1); }
                 ctx.globalAlpha = 1.0;
@@ -3233,7 +3278,7 @@
             if (state.bg.weather.includes('hujan_emas')) {
                 let wp = getWProps('hujan_emas');
                 let currentMaxGold = wp.int * 3; let spawnChance = 0.85 - (wp.int / 200);
-                if (goldDrops.length < currentMaxGold && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 15); for(let k=0; k<spawnCount; k++) { if (goldDrops.length >= currentMaxGold) break; goldDrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 15 + 5, s: Math.random() * 5 + 8, o: Math.random() * 0.5 + 0.5, w: Math.random() * 2 + 1 }); } }
+                for (let t = 0; t < spawnTicks; t++) if (goldDrops.length < currentMaxGold && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 15); for(let k=0; k<spawnCount; k++) { if (goldDrops.length >= currentMaxGold) break; goldDrops.push({ x: Math.random() * w, y: -20, len: Math.random() * 15 + 5, s: Math.random() * 5 + 8, o: Math.random() * 0.5 + 0.5, w: Math.random() * 2 + 1 }); } }
                 ctx.strokeStyle = '#fbbf24'; ctx.lineCap = 'round';
                 for (let i = goldDrops.length - 1; i >= 0; i--) { let p = goldDrops[i]; p.y += p.s * wp.spd; ctx.globalAlpha = p.o; ctx.lineWidth = p.w; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + p.len); ctx.stroke(); if (p.y > h) goldDrops.splice(i, 1); }
                 ctx.globalAlpha = 1.0;
@@ -3241,7 +3286,7 @@
             if (state.bg.weather.includes('petir')) {
                 let wp = getWProps('petir');
                 let strikeChance = 0.99 - (wp.int / 1000) - (audioReactivity * 0.05); 
-                if (Math.random() > strikeChance) { let x = Math.random() * w; lightnings.push({ x: x, y: 0, segments: generateLightning(x, 0, h), life: 1.0, flash: Math.random() > 0.4 }); }
+                for (let t = 0; t < spawnTicks; t++) if (Math.random() > strikeChance) { let x = Math.random() * w; lightnings.push({ x: x, y: 0, segments: generateLightning(x, 0, h), life: 1.0, flash: Math.random() > 0.4 }); }
                 for (let i = lightnings.length - 1; i >= 0; i--) {
                     let l = lightnings[i]; l.life -= 0.06 * wp.spd;
                     if (l.flash && l.life > 0.7) { ctx.fillStyle = `rgba(255, 255, 255, ${l.life * 0.2})`; ctx.fillRect(0, 0, w, h); }
@@ -3262,7 +3307,7 @@
                 else if (hexColor.length === 7) { sr = parseInt(hexColor.substring(1,3), 16); sg = parseInt(hexColor.substring(3,5), 16); sb = parseInt(hexColor.substring(5,7), 16); }
                 let currentSmokeColor = `${sr}, ${sg}, ${sb}`;
 
-                if (smokes.length < maxSmokes && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 20); for(let k=0; k<spawnCount; k++) { if (smokes.length >= maxSmokes) break; smokes.push({ x: Math.random() * w, y: h + 50, r: Math.random() * 30 + 20, vx: (Math.random() - 0.5) * 1.5, vy: -(Math.random() * 2 + 1), life: 1.0, decay: Math.random() * 0.006 + 0.003, customColor: currentSmokeColor }); } }
+                for (let t = 0; t < spawnTicks; t++) if (smokes.length < maxSmokes && Math.random() > spawnChance) { let spawnCount = Math.ceil(wp.int / 20); for(let k=0; k<spawnCount; k++) { if (smokes.length >= maxSmokes) break; smokes.push({ x: Math.random() * w, y: h + 50, r: Math.random() * 30 + 20, vx: (Math.random() - 0.5) * 1.5, vy: -(Math.random() * 2 + 1), life: 1.0, decay: Math.random() * 0.006 + 0.003, customColor: currentSmokeColor }); } }
                 for (let i = smokes.length - 1; i >= 0; i--) {
                     let s = smokes[i]; s.x += s.vx * wp.spd * (1 + audioReactivity * 0.5); s.y += s.vy * wp.spd * (1 + audioReactivity * 0.5); s.r += 0.4 * wp.spd; s.life -= s.decay * wp.spd;
                     if (s.life > 0) { let grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r); grad.addColorStop(0, `rgba(${s.customColor || currentSmokeColor}, ${s.life * 0.4})`); grad.addColorStop(1, `rgba(${s.customColor || currentSmokeColor}, 0)`); ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, PI2); ctx.fill(); }
@@ -3330,7 +3375,7 @@
                         }
                     } 
                     else if (vizState.type.startsWith('wave')) {
-                        if (!isOfflineRendering) analyser.getByteTimeDomainData(dataArray);
+                        analyser.getByteTimeDomainData(dataArray);
                         ctx.lineWidth = Math.max(2, 6 - (screenWidthRatio)); const totalWaveWidth = w * screenWidthRatio; const sliceW = totalWaveWidth / dataArray.length;
                         let startWaveX = currentCx - (totalWaveWidth / 2); const amp = vizState.size * 2; bboxes[bboxKey] = { x: startWaveX, y: currentVizY - ((h / 2) * amp), w: totalWaveWidth, h: h * amp };
                         ctx.beginPath(); if(vizState.type.includes('fill')) ctx.moveTo(startWaveX, currentVizY);
@@ -3354,7 +3399,7 @@
                              else { ctx.fillStyle = `hsla(${baseHue}, 100%, 50%, 0.4)`; }
                              ctx.fill(); ctx.stroke();
                         } else if (!vizState.type.includes('dots')) { ctx.stroke(); }
-                        if (!isOfflineRendering) analyser.getByteFrequencyData(dataArray); 
+                        analyser.getByteFrequencyData(dataArray);  
                     }
                     else if (vizState.type === 'circle_progress') {
                         let radius = h * vizState.size * 0.3 + 50; 
@@ -3406,11 +3451,11 @@
                                 ctx.shadowColor = barColor; ctx.fillStyle = barColor;
                                 if (vizState.align === 'tengah') {
                                     ctx.fillRect(xPos, currentVizY - (barH/2), barThickness, barH);
-                                    if (barH/2 > window[capsKey][i]) window[capsKey][i] = barH/2; else window[capsKey][i] -= 2; let capOffset = Math.max(barH/2, window[capsKey][i]) + 5;
+                                    if (barH/2 > window[capsKey][i]) window[capsKey][i] = barH/2; else window[capsKey][i] -= 2 * frameStep; let capOffset = Math.max(barH/2, window[capsKey][i]) + 5;
                                     ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#ffffff'; ctx.fillRect(xPos, currentVizY - capOffset - 3, barThickness, 3); ctx.fillRect(xPos, currentVizY + capOffset, barThickness, 3);
                                 } else {
                                     ctx.fillRect(xPos, currentVizY - barH, barThickness, barH);
-                                    if (barH > window[capsKey][i]) window[capsKey][i] = barH; else window[capsKey][i] -= 2; let capY = currentVizY - Math.max(barH, window[capsKey][i]) - 5;
+                                    if (barH > window[capsKey][i]) window[capsKey][i] = barH; else window[capsKey][i] -= 2 * frameStep; let capY = currentVizY - Math.max(barH, window[capsKey][i]) - 5;
                                     ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#ffffff'; ctx.fillRect(xPos, capY - 3, barThickness, 3);
                                 }
                             }
@@ -3849,7 +3894,7 @@
                 // Efek Partikel Ekor di ujung bar (jika aktif)
                 if (state.progressBarFx.particles && isPlaying && progress > 0 && progress < 1) {
                     ctx.shadowBlur = 0;
-                    if (Math.random() > 0.5) {
+                    if (Math.random() < 0.5 * frameStep) {
                         progressBarSparks.push({
                             x: hx, y: hy, vx: (Math.random() * -2) - 1, vy: (Math.random() - 0.5) * 3,
                             life: 1.0, color: state.progressBarFx.colorMode === 'auto' ? progColor : state.progressBarFx.progressColor, size: Math.random() * 2 + 1
@@ -3857,7 +3902,7 @@
                     }
                     for (let i = progressBarSparks.length - 1; i >= 0; i--) {
                         let p = progressBarSparks[i];
-                        p.x += p.vx; p.y += p.vy; p.life -= 0.05; p.size *= 0.95;
+                        p.x += p.vx * frameStep; p.y += p.vy * frameStep; p.life -= 0.05 * frameStep; p.size *= Math.pow(0.95, frameStep);
                         if (p.life <= 0) { progressBarSparks.splice(i, 1); } 
                         else {
                             ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
