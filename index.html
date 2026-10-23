@@ -1359,7 +1359,21 @@
 
         let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null, popup: null };
         let canvas = document.getElementById('previewCanvas');
-        let ctx = canvas.getContext('2d');
+        // Shadow/glow canvas tidak ikut ctx.scale(), jadi ukurannya diskalakan manual terhadap resolusi.
+        // Acuan 1080p (1920px) = tampilan lama tidak berubah; preview 720p & render 4K jadi proporsional sama.
+        function scaleShadowsWithResolution(c) {
+            const proto = Object.getPrototypeOf(c);
+            ['shadowBlur', 'shadowOffsetX', 'shadowOffsetY'].forEach(prop => {
+                const d = Object.getOwnPropertyDescriptor(proto, prop); if (!d) return;
+                Object.defineProperty(c, prop, {
+                    configurable: true,
+                    get() { return d.get.call(this) / (this.canvas.width / 1920); },
+                    set(v) { d.set.call(this, v * (this.canvas.width / 1920)); }
+                });
+            });
+            return c;
+        }
+        let ctx = scaleShadowsWithResolution(canvas.getContext('2d'));
         const wrapper = document.getElementById('canvas-wrapper');
         const audioElement = document.createElement('video'); // Diubah agar bisa merender frame MP4
         audioElement.crossOrigin = "anonymous";
@@ -1757,11 +1771,16 @@
                 const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 
-                // Cari data yang memiliki lirik mentah (plainLyrics) atau lirik waktu (syncedLyrics)
-                const match = data.find(item => item.plainLyrics || item.syncedLyrics);
+                // Utamakan lirik tersinkron (syncedLyrics) yang durasinya cocok dengan lagu yang dimuat (selisih <= 5 detik),
+                // supaya timestamp-nya pas dengan versi lagu ini. Kalau tidak ada yang cocok, pakai teks biasa seperti sebelumnya.
+                const trackDur = audioElement.duration;
+                const durKnown = isFinite(trackDur) && trackDur > 0;
+                const syncedMatch = data.filter(item => item.syncedLyrics && (!durKnown || (item.duration && Math.abs(item.duration - trackDur) <= 5)))
+                    .sort((a, b) => durKnown ? Math.abs(a.duration - trackDur) - Math.abs(b.duration - trackDur) : 0)[0];
+                const match = syncedMatch || data.find(item => item.plainLyrics || item.syncedLyrics);
                 
                 if (match) {
-                    let raw = match.plainLyrics;
+                    let raw = syncedMatch ? syncedMatch.syncedLyrics : match.plainLyrics;
                     
                     // Jika plainLyrics tidak ada, ambil syncedLyrics tapi HAPUS semua format waktunya
                     if (!raw && match.syncedLyrics) {
@@ -1787,7 +1806,7 @@
                         }
                         
                         updateLyricsStatus();
-                        showNotification("Teks lirik bersih berhasil diunduh!");
+                        showNotification(syncedMatch ? "Lirik tersinkron berhasil diunduh! (sudah pas dengan waktu lagu)" : "Teks lirik berhasil diunduh (belum tersinkron, silakan sync manual).");
                     } else {
                         showNotification("Pilih lagu di playlist terlebih dahulu!");
                         statusTxt.textContent = "Belum ada lagu dipilih."; statusTxt.className = "text-xs text-red-500 font-bold";
@@ -2370,16 +2389,14 @@
             }
         });
 
+        function getRenderSize() {
+            const r = state.render.res;
+            return r === 2160 ? { w: 3840, h: 2160 } : r === 1440 ? { w: 2560, h: 1440 } : r === 1080 ? { w: 1920, h: 1080 } : { w: 1280, h: 720 };
+        }
+        // Preview selalu 720p (semua elemen digambar di koordinat 1280x720 lalu diskalakan), supaya ringan di laptop/HP.
+        // Resolusi render hanya dipakai saat export MP4 & screenshot.
         function resizeCanvas() {
-            if (state.render.res === 2160) {
-                canvas.width = 3840; canvas.height = 2160;
-            } else if (state.render.res === 1440) {
-                canvas.width = 2560; canvas.height = 1440;
-            } else if (state.render.res === 1080) {
-                canvas.width = 1920; canvas.height = 1080;
-            } else {
-                canvas.width = 1280; canvas.height = 720;
-            }
+            if (canvas.width !== 1280 || canvas.height !== 720) { canvas.width = 1280; canvas.height = 720; }
         }
         window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 100);
 
@@ -2467,11 +2484,14 @@
         document.getElementById('btnHapusAudio').addEventListener('click', clearAllAudio);
 
         document.getElementById('btnTangkapLayar').addEventListener('click', () => {
-            if (!canvas) return; if (!isPlaying && !isOfflineRendering) drawCanvas();
+            if (!canvas || isOfflineRendering) return;
+            // Gambar sekali di resolusi render agar screenshot tetap tajam, lalu kembali ke preview 720p
+            const size = getRenderSize(); canvas.width = size.w; canvas.height = size.h; drawCanvas();
             let filename = 'TNC7_Screenshot.png';
             if (playlist.length > 0 && playlist[0].file && playlist[0].file.name) { filename = playlist[0].file.name.replace(/\.[^/.]+$/, "") + '.png'; }
             try { const link = document.createElement('a'); link.download = filename; link.href = canvas.toDataURL('image/png', 1.0); link.click(); showNotification("Tangkapan layar disimpan"); } 
             catch (err) { showNotification("Gagal mengambil tangkapan layar."); }
+            finally { resizeCanvas(); drawCanvas(); }
         });
 
         // UPDATE: Terima format Video
@@ -2848,7 +2868,7 @@
                 audioEncoder.configure({ codec: audioPick.enc, sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
 
                 if (typeof OffscreenCanvas !== 'undefined') { canvas = new OffscreenCanvas(targetWidth, targetHeight); } else { canvas = document.createElement('canvas'); canvas.width = targetWidth; canvas.height = targetHeight; }
-                ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+                ctx = scaleShadowsWithResolution(canvas.getContext('2d', { alpha: false, desynchronized: true }));
 
                 let totalVideoFramesEncoded = 0; let totalAudioSamplesEncoded = 0;
 
@@ -3065,7 +3085,7 @@
                 
                 await processAudio(originalAudioBuffer, audioEncoder); indicator.textContent = 'RENDER VIDEO... 0%';
                 if (typeof OffscreenCanvas !== 'undefined') { canvas = new OffscreenCanvas(targetWidth, targetHeight); } else { canvas = document.createElement('canvas'); canvas.width = targetWidth; canvas.height = targetHeight; }
-                ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+                ctx = scaleShadowsWithResolution(canvas.getContext('2d', { alpha: false, desynchronized: true }));
 
                 const offlineCtx = new OfflineAudioContext(numChannels, Math.ceil(targetSampleRate * duration), targetSampleRate);
                 const source = offlineCtx.createBufferSource(); source.buffer = originalAudioBuffer;
