@@ -1359,7 +1359,21 @@
 
         let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null, popup: null };
         let canvas = document.getElementById('previewCanvas');
-        let ctx = canvas.getContext('2d');
+        // Shadow/glow canvas tidak ikut ctx.scale(), jadi ukurannya diskalakan manual terhadap resolusi.
+        // Acuan 1080p (1920px) = tampilan lama tidak berubah; preview 720p & render 4K jadi proporsional sama.
+        function scaleShadowsWithResolution(c) {
+            const proto = Object.getPrototypeOf(c);
+            ['shadowBlur', 'shadowOffsetX', 'shadowOffsetY'].forEach(prop => {
+                const d = Object.getOwnPropertyDescriptor(proto, prop); if (!d) return;
+                Object.defineProperty(c, prop, {
+                    configurable: true,
+                    get() { return d.get.call(this) / (this.canvas.width / 1920); },
+                    set(v) { d.set.call(this, v * (this.canvas.width / 1920)); }
+                });
+            });
+            return c;
+        }
+        let ctx = scaleShadowsWithResolution(canvas.getContext('2d'));
         const wrapper = document.getElementById('canvas-wrapper');
         const audioElement = document.createElement('video'); // Diubah agar bisa merender frame MP4
         audioElement.crossOrigin = "anonymous";
@@ -1640,14 +1654,20 @@
         document.getElementById('overlaySpeed').addEventListener('input', (e) => { state.overlay.speed = e.target.value / 100; });
 
         document.getElementById('overlayInput').addEventListener('change', (e) => {
-            const file = e.target.files[0]; if (!file) return; const url = URL.createObjectURL(file);
+            const file = e.target.files[0]; if (!file) return; releaseOverlay(); const url = URL.createObjectURL(file);
             document.getElementById('overlayNameDisplay').textContent = file.name;
             if (file.type.startsWith('video/')) {
-                const vid = document.createElement('video'); vid.src = url; vid.loop = true; vid.muted = true; vid.play();
+                const vid = document.createElement('video'); vid.src = url; vid.loop = true; vid.muted = true; vid.play().catch(() => {});
                 state.overlay.element = vid; state.overlay.type = 'video';
             } else { const img = new Image(); img.src = url; state.overlay.element = img; state.overlay.type = 'image'; }
         });
-        document.getElementById('btnHapusOverlay').addEventListener('click', () => { state.overlay.element = null; document.getElementById('overlayNameDisplay').textContent = "Belum ada"; });
+        function releaseOverlay() {
+            const old = state.overlay.element; if (!old) return;
+            const oldUrl = old.src; releaseMediaElement(old);
+            if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
+            state.overlay.element = null;
+        }
+        document.getElementById('btnHapusOverlay').addEventListener('click', () => { releaseOverlay(); document.getElementById('overlayNameDisplay').textContent = "Belum ada"; });
 
         document.getElementById('bgMirrorEnable').addEventListener('change', (e) => { state.bg.mirror = e.target.checked; });
         document.getElementById('bgCrossfadeEnable').addEventListener('change', (e) => { 
@@ -1751,11 +1771,16 @@
                 const res = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 
-                // Cari data yang memiliki lirik mentah (plainLyrics) atau lirik waktu (syncedLyrics)
-                const match = data.find(item => item.plainLyrics || item.syncedLyrics);
+                // Utamakan lirik tersinkron (syncedLyrics) yang durasinya cocok dengan lagu yang dimuat (selisih <= 5 detik),
+                // supaya timestamp-nya pas dengan versi lagu ini. Kalau tidak ada yang cocok, pakai teks biasa seperti sebelumnya.
+                const trackDur = audioElement.duration;
+                const durKnown = isFinite(trackDur) && trackDur > 0;
+                const syncedMatch = data.filter(item => item.syncedLyrics && (!durKnown || (item.duration && Math.abs(item.duration - trackDur) <= 5)))
+                    .sort((a, b) => durKnown ? Math.abs(a.duration - trackDur) - Math.abs(b.duration - trackDur) : 0)[0];
+                const match = syncedMatch || data.find(item => item.plainLyrics || item.syncedLyrics);
                 
                 if (match) {
-                    let raw = match.plainLyrics;
+                    let raw = syncedMatch ? syncedMatch.syncedLyrics : match.plainLyrics;
                     
                     // Jika plainLyrics tidak ada, ambil syncedLyrics tapi HAPUS semua format waktunya
                     if (!raw && match.syncedLyrics) {
@@ -1781,7 +1806,7 @@
                         }
                         
                         updateLyricsStatus();
-                        showNotification("Teks lirik bersih berhasil diunduh!");
+                        showNotification(syncedMatch ? "Lirik tersinkron berhasil diunduh! (sudah pas dengan waktu lagu)" : "Teks lirik berhasil diunduh (belum tersinkron, silakan sync manual).");
                     } else {
                         showNotification("Pilih lagu di playlist terlebih dahulu!");
                         statusTxt.textContent = "Belum ada lagu dipilih."; statusTxt.className = "text-xs text-red-500 font-bold";
@@ -1830,7 +1855,7 @@
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100);
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000);
             
             showNotification("Lirik berhasil diunduh ke PC!");
         });
@@ -1950,7 +1975,7 @@
             const blob = new Blob([jsonStr], {type: "application/json"}); 
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = "TNC7_Lyrics_Backup.json"; document.body.appendChild(a); a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); 
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); 
             showNotification("Backup Lirik berhasil diekspor!");
         });
 
@@ -1978,6 +2003,8 @@
         const lrcModal = document.getElementById('lrc-modal');
         const lrcTextarea = document.getElementById('lrc-textarea');
         const lrcBackdrop = document.getElementById('lrc-highlight-backdrop');
+
+        function lrcFractionToSec(frac) { return parseInt(frac) / Math.pow(10, frac.length); }
 
         function updateLrcHighlight(currentTime = -1) {
             let text = lrcTextarea.value;
@@ -2022,17 +2049,12 @@
 
         lrcTextarea.addEventListener('input', () => {
             updateLrcHighlight(audioElement && !audioElement.paused ? audioElement.currentTime : -1);
-            updateLrcHighlightRealtime();
         });
         lrcTextarea.addEventListener('scroll', () => { lrcBackdrop.scrollTop = lrcTextarea.scrollTop; });
 
         function updateLrcHighlightRealtime() {
             updateLrcHighlight(audioElement ? audioElement.currentTime : -1);
         }
-
-        lrcTextarea.addEventListener('input', () => {
-            updateLrcHighlight(audioElement && !audioElement.paused ? audioElement.currentTime : -1);
-        });
 
         document.getElementById('btnEditLrc').addEventListener('click', () => {
             if (currentTrackIndex < 0 || currentTrackIndex >= playlist.length) {
@@ -2135,8 +2157,7 @@
              let selectionText = val.substring(selStart, selEnd);
              
              let newText = selectionText.replace(/\[(\d{2,}):(\d{2})\.(\d{1,3})\]/g, (match, m, s, ms) => {
-                let msPadding = ms.length === 2 ? ms + '0' : ms;
-                let time = parseInt(m) * 60 + parseInt(s) + (parseInt(msPadding) / 1000);
+                let time = parseInt(m) * 60 + parseInt(s) + lrcFractionToSec(ms);
                 time += offset; if(time < 0) time = 0;
                 let newM = Math.floor(time / 60).toString().padStart(2, '0');
                 let newS = Math.floor(time % 60).toString().padStart(2, '0');
@@ -2347,9 +2368,8 @@
             if (!isNaN(offset) && offset !== 0) {
                 let lines = lrcTextarea.value.split('\n');
                 let newLines = lines.map(line => {
-                    return line.replace(/\[(\d{2}):(\d{2})\.(\d{2,3})\]/g, (match, m, s, ms) => {
-                        let msPadding = ms.length === 2 ? ms + '0' : ms;
-                        let time = parseInt(m) * 60 + parseInt(s) + (parseInt(msPadding) / 1000);
+                    return line.replace(/\[(\d{2,}):(\d{2})\.(\d{1,3})\]/g, (match, m, s, ms) => {
+                        let time = parseInt(m) * 60 + parseInt(s) + lrcFractionToSec(ms);
                         time += offset;
                         if(time < 0) time = 0;
                         let newM = Math.floor(time / 60).toString().padStart(2, '0');
@@ -2359,20 +2379,24 @@
                     });
                 });
                 lrcTextarea.value = newLines.join('\n');
+                updateLrcHighlight(audioElement && !audioElement.paused ? audioElement.currentTime : -1);
+                if (currentTrackIndex >= 0 && playlist[currentTrackIndex]) {
+                    playlist[currentTrackIndex].rawLRC = lrcTextarea.value;
+                    playlist[currentTrackIndex].lyrics = parseLRC(lrcTextarea.value);
+                    updateLyricsStatus(true);
+                }
                 showNotification(`Semua waktu lirik disesuaikan ${offset > 0 ? '+' : ''}${offset}s`);
             }
         });
 
+        function getRenderSize() {
+            const r = state.render.res;
+            return r === 2160 ? { w: 3840, h: 2160 } : r === 1440 ? { w: 2560, h: 1440 } : r === 1080 ? { w: 1920, h: 1080 } : { w: 1280, h: 720 };
+        }
+        // Preview selalu 720p (semua elemen digambar di koordinat 1280x720 lalu diskalakan), supaya ringan di laptop/HP.
+        // Resolusi render hanya dipakai saat export MP4 & screenshot.
         function resizeCanvas() {
-            if (state.render.res === 2160) {
-                canvas.width = 3840; canvas.height = 2160;
-            } else if (state.render.res === 1440) {
-                canvas.width = 2560; canvas.height = 1440;
-            } else if (state.render.res === 1080) {
-                canvas.width = 1920; canvas.height = 1080;
-            } else {
-                canvas.width = 1280; canvas.height = 720;
-            }
+            if (canvas.width !== 1280 || canvas.height !== 720) { canvas.width = 1280; canvas.height = 720; }
         }
         window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 100);
 
@@ -2460,11 +2484,15 @@
         document.getElementById('btnHapusAudio').addEventListener('click', clearAllAudio);
 
         document.getElementById('btnTangkapLayar').addEventListener('click', () => {
-            if (!canvas) return; if (!isPlaying && !isOfflineRendering) drawCanvas();
+            if (!canvas || isOfflineRendering) return;
+            // Gambar sekali di resolusi render agar screenshot tetap tajam, lalu kembali ke preview 720p
+            const size = getRenderSize(); canvas.width = size.w; canvas.height = size.h; drawCanvas();
             let filename = 'TNC7_Screenshot.png';
-            if (playlist.length > 0 && playlist[0].file && playlist[0].file.name) { filename = playlist[0].file.name.replace(/\.[^/.]+$/, "") + '.png'; }
+            const shotTrack = playlist[currentTrackIndex] || playlist[0];
+            if (shotTrack && shotTrack.file && shotTrack.file.name) { filename = shotTrack.file.name.replace(/\.[^/.]+$/, "") + '.png'; }
             try { const link = document.createElement('a'); link.download = filename; link.href = canvas.toDataURL('image/png', 1.0); link.click(); showNotification("Tangkapan layar disimpan"); } 
             catch (err) { showNotification("Gagal mengambil tangkapan layar."); }
+            finally { resizeCanvas(); drawCanvas(); }
         });
 
         // UPDATE: Terima format Video
@@ -2481,20 +2509,34 @@
         document.getElementById('btnHapusImagePlaylist').addEventListener('click', () => {
             imagePlaylist.forEach(item => { if (item.url) URL.revokeObjectURL(item.url); });
             imagePlaylist = []; isImagePlaylistActive = false; currentImageIndex = -1; document.getElementById('imgPlaylistPanel').style.display = 'none';
-            state.bg.image = null; state.bg.imgElement = null; 
-            bgPrevElement = null; isBgCrossfading = false;
+            releaseBgMedia();
             renderImagePlaylistUI(); showNotification("Playlist latar belakang dihapus");
         });
 
         // UPDATE: Logika Crossfade & Pemutaran Video Background
+        // Hentikan & lepaskan decoder video lama, supaya tidak terus diputar diam-diam di belakang (boros CPU/RAM)
+        function releaseMediaElement(el) {
+            if (!el || el.tagName !== 'VIDEO') return;
+            try { el.pause(); el.removeAttribute('src'); el.load(); } catch (e) {}
+        }
+        function releaseBgMedia() {
+            if (bgPrevElement !== state.bg.imgElement) releaseMediaElement(bgPrevElement);
+            releaseMediaElement(state.bg.imgElement);
+            state.bg.image = null; state.bg.imgElement = null; bgPrevElement = null; isBgCrossfading = false;
+        }
+
+        let bgLoadToken = 0;
         function loadBgImageFromPlaylist(index) {
             if (index < 0 || index >= imagePlaylist.length) return;
             const item = imagePlaylist[index]; 
             const isVideo = item.file.type.startsWith('video/');
+            const oldElement = state.bg.imgElement; const loadToken = ++bgLoadToken;
+            // Transisi sebelumnya belum selesai: elemen lamanya tidak dipakai lagi
+            if (bgPrevElement && bgPrevElement !== oldElement) releaseMediaElement(bgPrevElement);
 
             // Trigger crossfade jika sudah ada elemen sebelumnya
-            if (state.bg.imgElement && state.bg.crossfade) {
-                bgPrevElement = state.bg.imgElement;
+            if (oldElement && state.bg.crossfade) {
+                bgPrevElement = oldElement;
                 bgCrossfadeStartTime = getRenderTime();
                 isBgCrossfading = true;
             } else {
@@ -2511,12 +2553,15 @@
                 }
                 state.bg.image = item.url; 
                 state.bg.imgElement = vid;
+                if (bgPrevElement !== oldElement) releaseMediaElement(oldElement);
                 if(!isPlaying && !isOfflineRendering) drawCanvas();
             } else {
                 const img = new Image();
                 img.onload = () => { 
+                    if (loadToken !== bgLoadToken) return; // sudah diganti background lain sebelum gambar ini selesai dimuat
                     state.bg.image = item.url; 
                     state.bg.imgElement = img; 
+                    if (bgPrevElement !== oldElement) releaseMediaElement(oldElement);
                     if(!isPlaying && !isOfflineRendering) drawCanvas(); 
                 }; 
                 img.src = item.url;
@@ -2560,7 +2605,7 @@
                 const removeBtn = document.createElement('button'); removeBtn.className = 'remove-track-btn p-1'; removeBtn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
                 removeBtn.onclick = (e) => { 
                     e.stopPropagation(); if(item.url) URL.revokeObjectURL(item.url); imagePlaylist.splice(index, 1);
-                    if(imagePlaylist.length === 0) { isImagePlaylistActive = false; currentImageIndex = -1; state.bg.image = null; state.bg.imgElement = null; document.getElementById('imgPlaylistPanel').style.display = 'none'; if(!isPlaying && !isOfflineRendering) drawCanvas(); } 
+                    if(imagePlaylist.length === 0) { isImagePlaylistActive = false; currentImageIndex = -1; releaseBgMedia(); document.getElementById('imgPlaylistPanel').style.display = 'none'; if(!isPlaying && !isOfflineRendering) drawCanvas(); } 
                     else { if (currentImageIndex === index) { currentImageIndex = Math.min(index, imagePlaylist.length - 1); loadBgImageFromPlaylist(currentImageIndex); } else if (currentImageIndex > index) { currentImageIndex--; } }
                     renderImagePlaylistUI(); 
                 };
@@ -2657,7 +2702,7 @@
         }
 
         function forceGarbageCollection() {
-            snowflakes = []; raindrops = []; goldDrops = []; lightnings = []; smokes = []; progressBarSparks = []; window.plexusNodes = null; window.cyberCaps = null; smoothedKick = 0;
+            snowflakes = []; raindrops = []; goldDrops = []; lightnings = []; smokes = []; progressBarSparks = []; window.plexusNodes = null; window.cyberCaps_viz = null; window.cyberCaps_viz2 = null; smoothedKick = 0;
             if (canvas) { 
                 if (state.render.res === 2160) {
                     canvas.width = 3840; canvas.height = 2160;
@@ -2824,7 +2869,7 @@
                 audioEncoder.configure({ codec: audioPick.enc, sampleRate: targetSampleRate, numberOfChannels: numChannels, bitrate: 128000 });
 
                 if (typeof OffscreenCanvas !== 'undefined') { canvas = new OffscreenCanvas(targetWidth, targetHeight); } else { canvas = document.createElement('canvas'); canvas.width = targetWidth; canvas.height = targetHeight; }
-                ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+                ctx = scaleShadowsWithResolution(canvas.getContext('2d', { alpha: false, desynchronized: true }));
 
                 let totalVideoFramesEncoded = 0; let totalAudioSamplesEncoded = 0;
 
@@ -2938,7 +2983,7 @@
                     const blob = new Blob([muxer.target.buffer], { type: 'video/mp4' });
                     if (blob && blob.size > 1024) {
                         const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = downloadName; document.body.appendChild(a); a.click();
-                        setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); await new Promise(r => setTimeout(r, 1000));
+                        setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); await new Promise(r => setTimeout(r, 1000));
                     }
                 }
                 muxer = null; forceGarbageCollection(); showNotification("Video gabungan berhasil dirender!");
@@ -3041,7 +3086,7 @@
                 
                 await processAudio(originalAudioBuffer, audioEncoder); indicator.textContent = 'RENDER VIDEO... 0%';
                 if (typeof OffscreenCanvas !== 'undefined') { canvas = new OffscreenCanvas(targetWidth, targetHeight); } else { canvas = document.createElement('canvas'); canvas.width = targetWidth; canvas.height = targetHeight; }
-                ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+                ctx = scaleShadowsWithResolution(canvas.getContext('2d', { alpha: false, desynchronized: true }));
 
                 const offlineCtx = new OfflineAudioContext(numChannels, Math.ceil(targetSampleRate * duration), targetSampleRate);
                 const source = offlineCtx.createBufferSource(); source.buffer = originalAudioBuffer;
@@ -3099,7 +3144,7 @@
 
                 if (!saveSuccess && blob && blob.size > 1024) {
                     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = downloadName; document.body.appendChild(a); a.click();
-                    setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); await new Promise(r => setTimeout(r, 1000));
+                    setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); await new Promise(r => setTimeout(r, 1000));
                 }
                 forceGarbageCollection();
 
@@ -3190,6 +3235,7 @@
                     prevGlobalAlphaBG = 1.0 - (elapsed / duration);
                 } else {
                     isBgCrossfading = false;
+                    if (bgPrevElement !== state.bg.imgElement) releaseMediaElement(bgPrevElement);
                     bgPrevElement = null;
                 }
             }
@@ -3892,7 +3938,9 @@
                 }
 
                 // Efek Partikel Ekor di ujung bar (jika aktif)
-                if (state.progressBarFx.particles && isPlaying && progress > 0 && progress < 1) {
+                // Saat render offline isPlaying = false, tapi videonya tetap "sedang diputar"
+                const barPlaying = isPlaying || isOfflineRendering;
+                if (state.progressBarFx.particles && barPlaying && progress > 0 && progress < 1) {
                     ctx.shadowBlur = 0;
                     if (Math.random() < 0.5 * frameStep) {
                         progressBarSparks.push({
@@ -3928,7 +3976,7 @@
                     const drawPrev = (x, y, size) => { ctx.beginPath(); ctx.moveTo(x + size, y - size); ctx.lineTo(x - size*0.4, y); ctx.lineTo(x + size, y + size); ctx.closePath(); ctx.fill(); ctx.fillRect(x - size - (size*0.4), y - size, size * 0.4, size * 2); };
                     
                     drawPrev(centerControlsX - spacing, controlsY, iconSize);
-                    if (isPlaying) { drawPause(centerControlsX, controlsY, iconSize); } else { drawPlay(centerControlsX, controlsY, iconSize); }
+                    if (barPlaying) { drawPause(centerControlsX, controlsY, iconSize); } else { drawPlay(centerControlsX, controlsY, iconSize); }
                     drawNext(centerControlsX + spacing, controlsY, iconSize);
                 }
                 ctx.restore();
@@ -4558,7 +4606,7 @@
             else if (draggingElement === 'time') { state.timeFx.offsetX = initialOffsetX + dx; state.timeFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'progressBar') { state.progressBarFx.offsetX = initialOffsetX + dx; state.progressBarFx.offsetY = initialOffsetY + dy; }
             else if (draggingElement === 'playlist') { state.playlistFx.offsetX = initialOffsetX + dx; state.playlistFx.offsetY = initialOffsetY + dy; }
-            else if (draggingElement === 'lyrics') { state.lyrics.offsetX = initialOffsetX + dx; state.lyrics.posY = initialOffsetY + dy; updateUIFromState(); }
+            else if (draggingElement === 'lyrics') { state.lyrics.offsetX = initialOffsetX + dx; state.lyrics.posY = initialOffsetY + dy; }
         }
 
         function handleDragEnd() { if (draggingElement) { draggingElement = null; canvas.style.cursor = 'default'; } }
@@ -4572,7 +4620,7 @@
             const tag = e.target.tagName; const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
             if (e.code === 'Space' && !isInput) { 
                 e.preventDefault(); 
-                if (typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive && !document.getElementById('preset-modal').classList.contains('opacity-0') === false) { doLiveSyncStamp(); } 
+                if (typeof isLiveSyncActive !== 'undefined' && isLiveSyncActive && document.getElementById('preset-modal').classList.contains('opacity-0')) { doLiveSyncStamp(); } 
                 else { playAudio(); }
             }
             if (e.ctrlKey && e.code === 'KeyZ') { if (!isInput) { e.preventDefault(); performUndo(); } }
@@ -4618,7 +4666,7 @@
             const snap = JSON.stringify(state, (k, v) => (k === 'element' || k === 'imgElement' ? undefined : v), 2);
             const blob = new Blob([snap], {type: "application/json"}); const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = "TNC7_Preset_Export.json"; document.body.appendChild(a); a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); showNotification("Preset Diekspor!");
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); showNotification("Preset Diekspor!");
         });
 
         document.getElementById('importJsonInput').addEventListener('change', (e) => {
