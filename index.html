@@ -410,6 +410,10 @@
                     <option value="30" selected>30 FPS</option>
                     <option value="60">60 FPS</option>
                 </select>
+                <select id="renderCodecSelect" class="custom-select w-[88px]" title="Codec video: H.264 = render cepat & bisa diputar di mana saja. AV1 = file ±45% lebih kecil dengan kejernihan sama, render lebih lama di perangkat tanpa encoder AV1 hardware.">
+                    <option value="h264" selected>H.264</option>
+                    <option value="av1">AV1 (Kecil)</option>
+                </select>
                 <div class="w-px h-4 bg-gray-700 mx-1"></div>
                 
                 <span class="text-[10px] font-bold text-gray-500 tracking-wider mr-1">BITRATE:</span>
@@ -1354,7 +1358,7 @@
             progressBarFx: { enabled: false, style: 'outline', showTime: true, showTitle: true, showControls: true, font: 'Inter', color: '#ffffff', progressColor: '#ffffff', width: 0.8, thickness: 4, offsetX: 0, offsetY: -100, reactive: false, particles: false, colorMode: 'statis', argbSpeed: 15 },
             playlistFx: { enabled: false, font: 'Calibri', size: 24, spacing: 1.5, letterSpacing: 0, color: '#ffffff', activeColor: '#facc15', offsetX: 0, offsetY: 0, blinkIntensity: 50, blinkMode: 'normal', scaleWidth: 1.0, scaleHeight: 1.0, bold: true, italic: false, transform: 'none', align: 'left', effect: 'normal', fxIntensity: 0.5, icon: 'none', iconColor: '#dc2626', maskEnabled: false, maskDirection: 'left_right', maskOpacity: 0.7, maskColor: '#000000', maskPrecision: 1.0, upNextToast: false },
             lyrics: { enabled: true, font: 'Inter', transform: 'capitalize', size: 36, posY: 150, delay: 0, colorBase: '#ffffff', colorActive: '#facc15', effect: 'shadow', animMode: 'scroll', interludeFade: 0, syncSpeed: 1.0 },
-            render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 5000000, method: 'gabung' }
+            render: { res: 1080, fps: 30, bitrateMode: 'variable', targetBitrate: 5000000, method: 'gabung', codec: 'h264' }
         };
 
         let bboxes = { viz: null, viz2: null, overlay: null, text: null, time: null, playlist: null, lyrics: null, progressBar: null, popup: null };
@@ -1457,6 +1461,7 @@
         document.getElementById('renderMethodSelect').addEventListener('change', (e) => { state.render.method = e.target.value; });
         document.getElementById('renderResSelect').addEventListener('change', (e) => { state.render.res = parseInt(e.target.value); resizeCanvas(); });
         document.getElementById('renderFpsSelect').addEventListener('change', (e) => { state.render.fps = parseInt(e.target.value); });
+        document.getElementById('renderCodecSelect').addEventListener('change', (e) => { state.render.codec = e.target.value; });
         
         document.querySelectorAll('#bgWeatherGroup button').forEach(btn => {
             btn.addEventListener('click', () => { switchWeatherTab(btn.dataset.val); });
@@ -2781,10 +2786,21 @@
             throw new Error('Browser ini tidak mendukung encoder audio AAC/Opus');
         }
 
+        function avcCodecForRes() { return state.render.res >= 2160 ? 'avc1.640034' : (state.render.res >= 1440 ? 'avc1.640032' : 'avc1.64002A'); }
+        // AV1 Main profile 8-bit; level mengikuti resolusi (3.1 = 720p, 4.0 = 1080p, 5.0 = 1440p/4K)
+        function getVideoCodecString() {
+            if (state.render.codec !== 'av1') return avcCodecForRes();
+            return state.render.res >= 1440 ? 'av01.0.12M.08' : (state.render.res >= 1080 ? 'av01.0.08M.08' : 'av01.0.05M.08');
+        }
+        function muxerVideoCodec(codec) { return codec.startsWith('av01') ? 'av1' : 'avc'; }
+
         async function pickVideoEncoderConfig(base) {
-            const codecs = [base.codec, 'avc1.64002A', 'avc1.4D402A', 'avc1.42E02A'].filter((c, i, a) => a.indexOf(c) === i);
             const tries = [];
-            for (const hw of ['prefer-hardware', 'no-preference']) for (const codec of codecs) { tries.push({ ...base, codec, hardwareAcceleration: hw }); const nb = { ...base, codec, hardwareAcceleration: hw }; delete nb.bitrateMode; tries.push(nb); }
+            const pushTry = (codec, hw) => { tries.push({ ...base, codec, hardwareAcceleration: hw }); const nb = { ...base, codec, hardwareAcceleration: hw }; delete nb.bitrateMode; tries.push(nb); };
+            // AV1 dicoba dulu (hardware lalu software); kalau tidak ada, jatuh ke urutan H.264 seperti biasa
+            if (base.codec.startsWith('av01')) { pushTry(base.codec, 'prefer-hardware'); pushTry(base.codec, 'no-preference'); }
+            const codecs = [base.codec.startsWith('av01') ? avcCodecForRes() : base.codec, 'avc1.64002A', 'avc1.4D402A', 'avc1.42E02A'].filter((c, i, a) => a.indexOf(c) === i);
+            for (const hw of ['prefer-hardware', 'no-preference']) for (const codec of codecs) pushTry(codec, hw);
             for (const cfg of tries) {
                 try { const sup = await VideoEncoder.isConfigSupported(cfg); if (!sup.supported) continue; } catch (e) { continue; }
                 let ok = false, gotOutput = false;
@@ -2797,7 +2813,10 @@
                     await probe.flush(); ok = gotOutput;
                 } catch (e) { ok = false; }
                 try { if (probe.state !== 'closed') probe.close(); } catch (e) {}
-                if (ok) return cfg;
+                if (ok) {
+                    if (base.codec.startsWith('av01') && !cfg.codec.startsWith('av01')) showNotification("Perangkat ini belum mendukung AV1, render memakai H.264.");
+                    return cfg;
+                }
             }
             throw new Error('Browser ini tidak bisa meng-encode H.264 di resolusi ini');
         }
@@ -2844,25 +2863,26 @@
                 if (!streamTarget) streamTarget = new Mp4Muxer.ArrayBufferTarget();
 
                 const audioPick = await pickAudioCodec(targetSampleRate, numChannels);
-                muxer = new Mp4Muxer.Muxer({
-                    target: streamTarget, video: { codec: 'avc', width: targetWidth, height: targetHeight, frameRate: targetFPS },
-                    audio: { codec: audioPick.mux, sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: false 
-                });
 
                 let hasVideoChunks = false;
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addVideoChunk(chunk, meta); hasVideoChunks = true; } catch (e) { renderErrorMsg = renderErrorMsg || ('Muxer video: ' + e.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder video: ' + e.message); abortOfflineRender = true; } });
-                
-                let vConfig = { 
-                    codec: state.render.res >= 2160 ? 'avc1.640034' : (state.render.res >= 1440 ? 'avc1.640032' : 'avc1.64002A'), 
-                    width: targetWidth, 
-                    height: targetHeight, 
-                    bitrate: state.render.targetBitrate, 
-                    framerate: targetFPS, 
-                    bitrateMode: state.render.bitrateMode, 
+
+                let vConfig = {
+                    codec: getVideoCodecString(),
+                    width: targetWidth,
+                    height: targetHeight,
+                    bitrate: state.render.targetBitrate,
+                    framerate: targetFPS,
+                    bitrateMode: state.render.bitrateMode,
                     hardwareAcceleration: 'prefer-hardware',
                     latencyMode: 'quality'
                 };
                 vConfig = await pickVideoEncoderConfig(vConfig);
+                // Muxer dibuat setelah codec final diketahui (AV1 bisa jatuh ke H.264 jika tidak didukung)
+                muxer = new Mp4Muxer.Muxer({
+                    target: streamTarget, video: { codec: muxerVideoCodec(vConfig.codec), width: targetWidth, height: targetHeight, frameRate: targetFPS },
+                    audio: { codec: audioPick.mux, sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: false
+                });
                 videoEncoder.configure(vConfig);
 
                 audioEncoder = new AudioEncoder({ output: (chunk, meta) => { if (abortOfflineRender) return; try { muxer.addAudioChunk(chunk, meta); } catch(e) { renderErrorMsg = renderErrorMsg || ('Muxer audio: ' + e.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder audio: ' + e.message); abortOfflineRender = true; } });
@@ -3051,22 +3071,22 @@
                     } catch (err) { streamTarget = null; writableStream = null; }
                 }
                 const audioPick = await pickAudioCodec(targetSampleRate, numChannels);
-                muxer = new Mp4Muxer.Muxer({ target: streamTarget || new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: targetWidth, height: targetHeight, frameRate: targetFPS }, audio: { codec: audioPick.mux, sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: streamTarget ? false : "in-memory" });
                 renderWritable = writableStream; renderWritableName = writableStream ? downloadName : null;
 
                 videoEncoder = new VideoEncoder({ output: (chunk, meta) => { try { muxer.addVideoChunk(chunk, meta); } catch (chunkErr) { renderErrorMsg = renderErrorMsg || ('Muxer video: ' + chunkErr.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder video: ' + e.message); abortOfflineRender = true; } });
-                
-                let vConfigSingle = { 
-                    codec: state.render.res >= 2160 ? 'avc1.640034' : (state.render.res >= 1440 ? 'avc1.640032' : 'avc1.64002A'), 
-                    width: targetWidth, 
-                    height: targetHeight, 
-                    bitrate: state.render.targetBitrate, 
-                    framerate: targetFPS, 
-                    bitrateMode: state.render.bitrateMode, 
+
+                let vConfigSingle = {
+                    codec: getVideoCodecString(),
+                    width: targetWidth,
+                    height: targetHeight,
+                    bitrate: state.render.targetBitrate,
+                    framerate: targetFPS,
+                    bitrateMode: state.render.bitrateMode,
                     hardwareAcceleration: 'prefer-hardware',
                     latencyMode: 'quality'
                 };
                 vConfigSingle = await pickVideoEncoderConfig(vConfigSingle);
+                muxer = new Mp4Muxer.Muxer({ target: streamTarget || new Mp4Muxer.ArrayBufferTarget(), video: { codec: muxerVideoCodec(vConfigSingle.codec), width: targetWidth, height: targetHeight, frameRate: targetFPS }, audio: { codec: audioPick.mux, sampleRate: targetSampleRate, numberOfChannels: numChannels }, fastStart: streamTarget ? false : "in-memory" });
                 videoEncoder.configure(vConfigSingle);
 
                 audioEncoder = new AudioEncoder({ output: (chunk, meta) => { try { muxer.addAudioChunk(chunk, meta); } catch(e) { renderErrorMsg = renderErrorMsg || ('Muxer audio: ' + e.message); abortOfflineRender = true; } }, error: (e) => { renderErrorMsg = renderErrorMsg || ('Encoder audio: ' + e.message); abortOfflineRender = true; } });
@@ -4543,7 +4563,7 @@
             const btnPBold = document.getElementById('btnPlaylistBold'); if(btnPBold) { if(state.playlistFx.bold) btnPBold.classList.add('btn-active'); else btnPBold.classList.remove('btn-active'); }
             
             setVal('renderMethodSelect', state.render.method); setBtn('renderBitrateModeGroup', state.render.bitrateMode); setVal('renderBitrateSelect', state.render.targetBitrate);
-            setVal('renderResSelect', state.render.res); setVal('renderFpsSelect', state.render.fps);
+            setVal('renderResSelect', state.render.res); setVal('renderFpsSelect', state.render.fps); setVal('renderCodecSelect', state.render.codec || 'h264');
 
             document.querySelectorAll('input[type=range]:not([data-no-indicator])').forEach(slider => { const span = slider.parentElement.querySelector('.val-indicator'); if (span) span.textContent = slider.value; });
             if (state.textFx.colorMode === 'auto') { document.getElementById('textStaticColorGroup').style.display = 'none'; document.getElementById('textArgbSpeedGroup').style.display = 'flex'; } else { document.getElementById('textStaticColorGroup').style.display = 'flex'; document.getElementById('textArgbSpeedGroup').style.display = 'none'; }
