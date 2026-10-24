@@ -1855,7 +1855,7 @@
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100);
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000);
             
             showNotification("Lirik berhasil diunduh ke PC!");
         });
@@ -1975,7 +1975,7 @@
             const blob = new Blob([jsonStr], {type: "application/json"}); 
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = "TNC7_Lyrics_Backup.json"; document.body.appendChild(a); a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); 
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); 
             showNotification("Backup Lirik berhasil diekspor!");
         });
 
@@ -2488,7 +2488,8 @@
             // Gambar sekali di resolusi render agar screenshot tetap tajam, lalu kembali ke preview 720p
             const size = getRenderSize(); canvas.width = size.w; canvas.height = size.h; drawCanvas();
             let filename = 'TNC7_Screenshot.png';
-            if (playlist.length > 0 && playlist[0].file && playlist[0].file.name) { filename = playlist[0].file.name.replace(/\.[^/.]+$/, "") + '.png'; }
+            const shotTrack = playlist[currentTrackIndex] || playlist[0];
+            if (shotTrack && shotTrack.file && shotTrack.file.name) { filename = shotTrack.file.name.replace(/\.[^/.]+$/, "") + '.png'; }
             try { const link = document.createElement('a'); link.download = filename; link.href = canvas.toDataURL('image/png', 1.0); link.click(); showNotification("Tangkapan layar disimpan"); } 
             catch (err) { showNotification("Gagal mengambil tangkapan layar."); }
             finally { resizeCanvas(); drawCanvas(); }
@@ -2701,7 +2702,7 @@
         }
 
         function forceGarbageCollection() {
-            snowflakes = []; raindrops = []; goldDrops = []; lightnings = []; smokes = []; progressBarSparks = []; window.plexusNodes = null; window.cyberCaps = null; smoothedKick = 0;
+            snowflakes = []; raindrops = []; goldDrops = []; lightnings = []; smokes = []; progressBarSparks = []; window.plexusNodes = null; window.cyberCaps_viz = null; window.cyberCaps_viz2 = null; smoothedKick = 0;
             if (canvas) { 
                 if (state.render.res === 2160) {
                     canvas.width = 3840; canvas.height = 2160;
@@ -2982,7 +2983,7 @@
                     const blob = new Blob([muxer.target.buffer], { type: 'video/mp4' });
                     if (blob && blob.size > 1024) {
                         const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = downloadName; document.body.appendChild(a); a.click();
-                        setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); await new Promise(r => setTimeout(r, 1000));
+                        setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); await new Promise(r => setTimeout(r, 1000));
                     }
                 }
                 muxer = null; forceGarbageCollection(); showNotification("Video gabungan berhasil dirender!");
@@ -3143,7 +3144,7 @@
 
                 if (!saveSuccess && blob && blob.size > 1024) {
                     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = downloadName; document.body.appendChild(a); a.click();
-                    setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); await new Promise(r => setTimeout(r, 1000));
+                    setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); await new Promise(r => setTimeout(r, 1000));
                 }
                 forceGarbageCollection();
 
@@ -3937,7 +3938,9 @@
                 }
 
                 // Efek Partikel Ekor di ujung bar (jika aktif)
-                if (state.progressBarFx.particles && isPlaying && progress > 0 && progress < 1) {
+                // Saat render offline isPlaying = false, tapi videonya tetap "sedang diputar"
+                const barPlaying = isPlaying || isOfflineRendering;
+                if (state.progressBarFx.particles && barPlaying && progress > 0 && progress < 1) {
                     ctx.shadowBlur = 0;
                     if (Math.random() < 0.5 * frameStep) {
                         progressBarSparks.push({
@@ -3973,7 +3976,7 @@
                     const drawPrev = (x, y, size) => { ctx.beginPath(); ctx.moveTo(x + size, y - size); ctx.lineTo(x - size*0.4, y); ctx.lineTo(x + size, y + size); ctx.closePath(); ctx.fill(); ctx.fillRect(x - size - (size*0.4), y - size, size * 0.4, size * 2); };
                     
                     drawPrev(centerControlsX - spacing, controlsY, iconSize);
-                    if (isPlaying) { drawPause(centerControlsX, controlsY, iconSize); } else { drawPlay(centerControlsX, controlsY, iconSize); }
+                    if (barPlaying) { drawPause(centerControlsX, controlsY, iconSize); } else { drawPlay(centerControlsX, controlsY, iconSize); }
                     drawNext(centerControlsX + spacing, controlsY, iconSize);
                 }
                 ctx.restore();
@@ -4663,7 +4666,7 @@
             const snap = JSON.stringify(state, (k, v) => (k === 'element' || k === 'imgElement' ? undefined : v), 2);
             const blob = new Blob([snap], {type: "application/json"}); const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = "TNC7_Preset_Export.json"; document.body.appendChild(a); a.click();
-            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 100); showNotification("Preset Diekspor!");
+            setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 60000); showNotification("Preset Diekspor!");
         });
 
         document.getElementById('importJsonInput').addEventListener('change', (e) => {

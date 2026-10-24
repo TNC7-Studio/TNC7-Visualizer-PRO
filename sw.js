@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tnc7-pro-cache-v31';
+const CACHE_NAME = 'tnc7-pro-cache-v32';
 const urlsToCache = [
     './',
     './index.html',
@@ -33,11 +33,21 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+    // Hanya file aplikasi sendiri (GET, origin yang sama); CDN & API lirik dibiarkan lewat tanpa diubah
+    const url = new URL(event.request.url);
+    if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+
     // Strategi: Network First, fallback to Cache
-    // Ini memastikan pengguna selalu mendapat versi terbaru dari GitHub
+    // Setiap kali online, salinan di cache ikut diperbarui supaya mode offline tidak tertinggal versi lama
     event.respondWith(
-        fetch(event.request).catch(() => {
-            return caches.match(event.request);
+        fetch(event.request).then(response => {
+            if (response.ok) {
+                const copy = response.clone();
+                caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+            }
+            return response;
+        }).catch(() => {
+            return caches.match(event.request, { ignoreSearch: true });
         })
     );
 });
